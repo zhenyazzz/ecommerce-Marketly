@@ -1,0 +1,83 @@
+server:
+  port: 8080  # API Gateway работает на этом порту
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # Product Service Routes
+        - id: product-service-products
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: productService
+                fallbackUri: forward:/fallback/product-service
+
+        - id: product-service-categories
+          uri: lb://product-service
+          predicates:
+            - Path=/api/categories/**
+
+        - id: product-service-inventory
+          uri: lb://product-service
+          predicates:
+            - Path=/api/inventory/**
+
+        # Cart Service Routes
+        - id: cart-service-carts
+          uri: lb://cart-service
+          predicates:
+            - Path=/api/carts/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: cartService
+                fallbackUri: forward:/fallback/cart-service
+
+        - id: cart-service-carts
+          uri: lb://cart-service
+          predicates:
+            - Path=/api/items/**
+
+        # Order Service Routes
+        - id: order-service-orders
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY
+
+
+        # Fallback Route
+        - id: fallback-route
+          uri: no://op
+          predicates:
+            - Path=/fallback/**
+          filters:
+            - name: RewritePath
+              args:
+                regexp: /fallback/(?<service>.*)
+                replacement: /fallback/general
+          
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.http.server.reactive: DEBUG
