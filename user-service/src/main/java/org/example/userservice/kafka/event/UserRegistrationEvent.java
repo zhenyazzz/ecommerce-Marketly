@@ -8,7 +8,6 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 public class UserRegistrationEvent {
-    private Long userId;
     private String username;
     private Set<String> roles;
 }

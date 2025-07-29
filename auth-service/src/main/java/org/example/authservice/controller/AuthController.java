@@ -59,7 +59,6 @@ public class AuthController {
         kafkaProducerService.sendUserRegistrationEvent(
                 "user-registration",
                 new org.example.authservice.kafka.event.UserRegistrationEvent(
-                        savedUser.getId(),
                         savedUser.getUsername(),
                         savedUser.getRoles().stream().map(Role::name).collect(Collectors.toSet())
                 )
