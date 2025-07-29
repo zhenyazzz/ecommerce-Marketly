@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.Set;
 
-public record UserRequest(
+public record CreateUserRequest(
         @NotBlank(message = "Username cannot be blank")
         String username,
 

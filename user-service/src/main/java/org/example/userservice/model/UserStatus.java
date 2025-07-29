@@ -1,4 +1,4 @@
 package org.example.userservice.model;
 
-public class Role {
+public record UserStatus() {
 }
