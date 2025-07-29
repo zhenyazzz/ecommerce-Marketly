@@ -4,9 +4,11 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.com.cartservice.model.CartStatus;
+
 public record CartResponse(
-        UUID cartId,
-        List<CartItemResponse> items,
+        UUID id,
+        List<CartItemResponse> cartItems,
         BigDecimal total,
-        String status
+        CartStatus status
 ) {}

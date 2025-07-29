@@ -8,9 +8,10 @@ import org.example.userservice.dto.request.UserSearchRequest;
 import org.example.userservice.dto.response.ProfileResponse;
 import org.example.userservice.dto.response.UserResponse;
 import org.example.userservice.exception.UserNotFoundException;
-import org.example.userservice.kafka.KafkaProducerService;
 import org.example.userservice.kafka.event.UserProfileUpdatedEvent;
+import org.example.userservice.kafka.producer.KafkaProducerService;
 import org.example.userservice.kafka.event.UserDeletedEvent;
+import org.example.userservice.kafka.event.UserCreatedEvent;
 import org.example.userservice.mapper.UserMapper;
 import org.example.userservice.model.User;
 import org.example.userservice.model.UserStatus;
@@ -51,6 +52,15 @@ public class UserService {
         log.info("Creating user: {}", userRequest.username());
         User user = userMapper.toUser(userRequest);
         User savedUser = userRepository.save(user);
+        
+        // Отправляем событие о создании пользователя
+        UserCreatedEvent event = new UserCreatedEvent(
+            savedUser.getId(),
+            savedUser.getUsername(),
+            savedUser.getEmail()
+        );
+        kafkaProducerService.sendUserCreatedEvent("user-created", event);
+        
         return userMapper.toUserResponse(savedUser);
     }
 

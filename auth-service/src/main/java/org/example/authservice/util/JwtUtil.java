@@ -64,6 +64,25 @@ public class JwtUtil {
         return Jwts.builder()
                 .subject(username)
                 .claim("roles", roles)
+                .claim("userId", getUserIdFromUsername(username)) // Добавляем userId
+                .issuer(issuer)
+                .issuedAt(new Date())
+                .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(key)
+                .compact();
+    }
+
+    public String generateTokenFromUsername(Authentication authentication, Long userId) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String username = userDetails.getUsername();
+        List<String> roles = userDetails.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+        return Jwts.builder()
+                .subject(username)
+                .claim("roles", roles)
+                .claim("userId", userId) // Явно передаем userId
                 .issuer(issuer)
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
@@ -77,6 +96,20 @@ public class JwtUtil {
                 .getPayload().getSubject();
     }
 
+    public Long getUserIdFromJwtToken(String token) {
+        Claims claims = jwtParser
+                .parseSignedClaims(token)
+                .getPayload();
+        
+        return claims.get("userId", Long.class);
+    }
+
+    // Вспомогательный метод для получения userId по username
+    private Long getUserIdFromUsername(String username) {
+        // Здесь нужно получить userId из базы данных
+        // Пока возвращаем null, нужно будет реализовать
+        return null;
+    }
 
     public boolean validateJwtToken(String authToken) {
         try {

@@ -6,42 +6,72 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/fallback")
 public class FallbackController {
-    @GetMapping("/general")
-    public ResponseEntity<Map<String, String>> generalFallback() {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Сервис временно недоступен. Попробуйте позже.");
-        response.put("timestamp", Instant.now().toString());
-        return ResponseEntity
-                .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(response);
+
+    @GetMapping("/user")
+    public ResponseEntity<Map<String, Object>> userServiceFallback() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+        response.put("error", "User service is temporarily unavailable");
+        response.put("message", "Пользовательский сервис временно недоступен. Попробуйте позже.");
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
     }
 
-    // Специфичный fallback для Cart Service
-    @GetMapping("/cart-service")
-    public ResponseEntity<Map<String, String>> cartServiceFallback() {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Сервис корзин временно недоступен.");
-        response.put("recommendation", "Попробуйте очистить кеш браузера.");
-        return ResponseEntity
-                .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(response);
+    @GetMapping("/auth")
+    public ResponseEntity<Map<String, Object>> authServiceFallback() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+        response.put("error", "Authentication service is temporarily unavailable");
+        response.put("message", "Сервис аутентификации временно недоступен. Попробуйте позже.");
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
     }
 
-    // Специфичный fallback для Product Service
-    @GetMapping("/product-service")
-    public ResponseEntity<Map<String, String>> productServiceFallback() {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Сервис товаров не отвечает.");
-        response.put("fallbackAction", "Показаны кэшированные данные.");
-        return ResponseEntity
-                .status(HttpStatus.PARTIAL_CONTENT)
-                .body(response);
+    @GetMapping("/cart")
+    public ResponseEntity<Map<String, Object>> cartServiceFallback() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+        response.put("error", "Cart service is temporarily unavailable");
+        response.put("message", "Сервис корзины временно недоступен. Попробуйте позже.");
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
     }
+
+    @GetMapping("/order")
+    public ResponseEntity<Map<String, Object>> orderServiceFallback() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+        response.put("error", "Order service is temporarily unavailable");
+        response.put("message", "Сервис заказов временно недоступен. Попробуйте позже.");
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+    }
+
+    @GetMapping("/payment")
+    public ResponseEntity<Map<String, Object>> paymentServiceFallback() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+        response.put("error", "Payment service is temporarily unavailable");
+        response.put("message", "Сервис оплаты временно недоступен. Попробуйте позже.");
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+    }
+
+    @GetMapping("/notification")
+    public ResponseEntity<Map<String, Object>> notificationServiceFallback() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+        response.put("error", "Notification service is temporarily unavailable");
+        response.put("message", "Сервис уведомлений временно недоступен. Попробуйте позже.");
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+    }
+    
 }

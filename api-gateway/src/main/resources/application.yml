@@ -1,83 +1,138 @@
 server:
-  port: 8080  # API Gateway работает на этом порту
+  port: 8080
 
 spring:
   application:
     name: api-gateway
+  
   cloud:
     gateway:
       routes:
-        # Product Service Routes
-        - id: product-service-products
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: authServiceCircuitBreaker
+                fallbackUri: forward:/fallback/auth
+        
+
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback/user
+
+        - id: product-service
           uri: lb://product-service
           predicates:
             - Path=/api/products/**
           filters:
+            - StripPrefix=1
             - name: CircuitBreaker
               args:
-                name: productService
-                fallbackUri: forward:/fallback/product-service
+                name: productServiceCircuitBreaker
+                fallbackUri: forward:/fallback/product
 
-        - id: product-service-categories
-          uri: lb://product-service
-          predicates:
-            - Path=/api/categories/**
-
-        - id: product-service-inventory
-          uri: lb://product-service
-          predicates:
-            - Path=/api/inventory/**
-
-        # Cart Service Routes
-        - id: cart-service-carts
+        - id: cart-service    
           uri: lb://cart-service
           predicates:
-            - Path=/api/carts/**
+            - Path=/api/cart/**
           filters:
+            - StripPrefix=1
             - name: CircuitBreaker
               args:
-                name: cartService
-                fallbackUri: forward:/fallback/cart-service
+                name: cartServiceCircuitBreaker
+                fallbackUri: forward:/fallback/cart
 
-        - id: cart-service-carts
-          uri: lb://cart-service
-          predicates:
-            - Path=/api/items/**
-
-        # Order Service Routes
-        - id: order-service-orders
+        - id: order-service
           uri: lb://order-service
           predicates:
             - Path=/api/orders/**
           filters:
-            - name: Retry
+            - StripPrefix=1
+            - name: CircuitBreaker
               args:
-                retries: 3
-                statuses: BAD_GATEWAY
-
-
-        # Fallback Route
-        - id: fallback-route
-          uri: no://op
+                name: orderServiceCircuitBreaker
+                fallbackUri: forward:/fallback/order
+        
+        - id: payment-service
+          uri: lb://payment-service
           predicates:
-            - Path=/fallback/**
+            - Path=/api/payments/**
           filters:
-            - name: RewritePath
+            - StripPrefix=1
+            - name: CircuitBreaker
               args:
-                regexp: /fallback/(?<service>.*)
-                replacement: /fallback/general
-          
+                name: paymentServiceCircuitBreaker
+                fallbackUri: forward:/fallback/payment
+                
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: notificationServiceCircuitBreaker
+                fallbackUri: forward:/fallback/notification
+            
 
+
+# Eureka - для поиска сервисов
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
+  instance:
+    prefer-ip-address: true
 
+# JWT настройки
+jwt:
+  secret-key: aXv7j3tR8kL9mQp2sV5y7x9A1zC4E7H0bW3cZ6u8oP1dF4rT5nJ9iK2lO0q
+  access-token-expiration: 86400000
+  issuer: api-gateway
 
-
+# Логирование
 logging:
   level:
-    org.springframework.cloud.gateway: DEBUG
-    org.springframework.http.server.reactive: DEBUG
+    org.springframework.cloud.gateway: INFO
+    org.com.apigateway: DEBUG
+
+# Actuator для мониторинга
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+      base-path: /actuator
+
+# Resilience4j circuit breaker config
+resilience4j:
+  circuitbreaker:
+    instances:
+      userServiceCircuitBreaker:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
+      productServiceCircuitBreaker:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10

@@ -82,7 +82,12 @@ public class AuthController {
         }
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtil.generateTokenFromUsername(authentication);
+        
+        // Получаем пользователя для userId
+        User user = userRepository.findByUsername(authRequest.username())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        String jwt = jwtUtil.generateTokenFromUsername(authentication, user.getId());
 
         kafkaProducerService.sendUserLoginEvent(
                 "user-login",

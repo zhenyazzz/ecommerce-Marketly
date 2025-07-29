@@ -1,6 +1,5 @@
 package org.com.cartservice.config;
 
-import org.com.cartservice.model.Cart;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -12,16 +11,17 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfig {
 
     @Bean
-    public RedisTemplate<String, Cart> redisTemplate(RedisConnectionFactory factory) {
-        RedisTemplate<String, Cart> template = new RedisTemplate<>();
-        template.setConnectionFactory(factory);
-
-        // Сериализатор для ключей (String)
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        
         template.setKeySerializer(new StringRedisSerializer());
-
-        // Сериализатор для значений (JSON)
+        template.setHashKeySerializer(new StringRedisSerializer());
+        
         template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        
+        template.afterPropertiesSet();
         return template;
     }
 }
