@@ -18,8 +18,6 @@ public class CategoryMapper {
         return CategoryResponse.builder()
                 .id(category.getId())
                 .name(category.getName())
-                .parentId(category.getParent() != null ? category.getParent().getId() : null)
-                .parentName(category.getParent() != null ? category.getParent().getName() : null)
                 .build();
     }
 }

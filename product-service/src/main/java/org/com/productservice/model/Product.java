@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+
 
 @Entity
 @Table(name = "products")
@@ -23,8 +23,8 @@ import java.util.UUID;
 public class Product {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @NotBlank(message = "Product name cannot be empty")
     @Size(min = 3, max = 100, message = "Product name must be between 3 and 100 characters")
@@ -40,24 +40,22 @@ public class Product {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
-    @NotBlank(message = "SKU cannot be empty")
-    @Pattern(regexp = "^[A-Z0-9-]+$", message = "SKU must contain only uppercase letters, numbers, and hyphens")
-    @Column(unique = true, nullable = false)
-    private String sku;
+    @Valid
+    private String mainImage;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     @NotNull(message = "Stock is required")
     @Min(value = 0, message = "Stock cannot be negative")
     @Column(nullable = false)
     private Integer stock;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private Category category;
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<String> images =  new ArrayList<>();
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    @Valid // Валидирует вложенные сущности
-    private List<ProductImage> images = new ArrayList<>();
+    private boolean active;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

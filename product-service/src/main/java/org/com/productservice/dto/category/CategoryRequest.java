@@ -14,5 +14,4 @@ public class CategoryRequest {
     @Size(min = 2, max = 50, message = "Name must be 2-50 characters")
     private String name;
 
-    private UUID parentId;
 }

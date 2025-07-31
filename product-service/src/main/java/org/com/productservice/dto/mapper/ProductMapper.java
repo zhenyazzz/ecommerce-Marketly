@@ -10,11 +10,11 @@ import org.springframework.stereotype.Component;
 public class ProductMapper {
 
     public Product toEntity(ProductRequest request) {
+        //TODO: не передаются id
         return Product.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .price(request.getPrice())
-                .sku(request.getSku())
                 .stock(request.getStock())
                 .build();
     }
@@ -25,10 +25,8 @@ public class ProductMapper {
                 .name(product.getName())
                 .description(product.getDescription())
                 .price(product.getPrice())
-                .sku(product.getSku())
                 .stock(product.getStock())
                 .categoryId(product.getCategory().getId())
-                .categoryName(product.getCategory().getName())
                 .build();
     }
     public ProductDto toProductDto(Product product) {
@@ -43,7 +41,6 @@ public class ProductMapper {
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
-        product.setSku(request.getSku());
         product.setStock(request.getStock());
     }
 }
