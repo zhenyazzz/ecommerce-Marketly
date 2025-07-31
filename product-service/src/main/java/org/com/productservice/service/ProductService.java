@@ -1,15 +1,15 @@
-package org.com.productservice.service.impl;
+package org.com.productservice.service;
 
 import lombok.RequiredArgsConstructor;
-import org.com.productservice.dto.mapper.ProductMapper;
+import org.com.productservice.mapper.ProductMapper;
 import org.com.productservice.dto.product.ProductDto;
 import org.com.productservice.dto.product.ProductRequest;
 import org.com.productservice.dto.product.ProductResponse;
 import org.com.productservice.exception.AlreadyExistsException;
 import org.com.productservice.exception.ProductNotFoundException;
 import org.com.productservice.model.Product;
+import org.com.productservice.repository.CategoryRepository;
 import org.com.productservice.repository.ProductRepository;
-import org.com.productservice.service.IProductService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,123 +17,105 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
-public class ProductService implements IProductService {
+public class ProductService{
 
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
     private final ProductMapper productMapper;
     private final CategoryService categoryService;
 
-    @Override
+
     @Transactional
     public ProductResponse createProduct(ProductRequest request) {
-        if (productRepository.existsBySku(request.getSku())) {
-            throw new AlreadyExistsException("Product already exists with sku: " + request.getSku());
-        }
-        Product product = productMapper.toEntity(request);
-        product.setCategory(categoryService.getCategoryEntity(request.getCategoryId()));
 
+        Product product = productMapper.toProduct(request);
+        product.setCategory(categoryRepository.getCategoryById(request.getCategoryId()));
         Product savedProduct = productRepository.save(product);
-        return productMapper.toResponse(savedProduct);
+        return productMapper.toProductResponse(savedProduct);
     }
 
-    @Override
+
+
     @Transactional(readOnly = true)
-    public ProductResponse getProductById(UUID id) {
+    public ProductResponse getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
-        return productMapper.toResponse(product);
+        return productMapper.toProductResponse(product);
     }
 
+
+
     @Transactional(readOnly = true)
-    @Override
-    public ProductDto getProductByIdForCart(UUID id) {
+    public ProductDto getProductByIdForCart(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
         return productMapper.toProductDto(product);
     }
 
-    @Override
+
+
     public Page<ProductResponse> getAllProducts(Pageable pageable) {
-        return productRepository.findAll(pageable).map(productMapper::toResponse);
+        return productRepository.findAll(pageable).map(productMapper::toProductResponse);
     }
 
-    @Override
+
+
     @Transactional
-    public ProductResponse updateProduct(UUID id, ProductRequest request) {
+    public ProductResponse updateProduct(Long id, ProductRequest request) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
+        productMapper.updateProductFromProductRequest(request, product);
+        product.setCategory(categoryRepository.getCategoryById(request.getCategoryId()));
 
-        // Проверка уникальности SKU (если изменился)
-        if (!product.getSku().equals(request.getSku()) &&
-            productRepository.existsBySku(request.getSku())) {
-            throw new IllegalArgumentException("SKU already exists: " + request.getSku());
-        }
-
-        productMapper.updateEntityFromRequest(request, product);
-        product.setCategory(categoryService.getCategoryEntity(request.getCategoryId()));
-
-        return productMapper.toResponse(productRepository.save(product));
+        return productMapper.toProductResponse(productRepository.save(product));
     }
 
-    @Override
+
+
     @Transactional
-    public void deleteProduct(UUID id) {
+    public void deleteProduct(Long id) {
         if (!productRepository.existsById(id)) {
             throw new ProductNotFoundException("Product not found with id: " + id);
         }
         productRepository.deleteById(id);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public boolean existsById(UUID id) {
-        return productRepository.existsById(id);
-    }
 
-    @Override
-    public ProductResponse getProductBySku(String sku) {
-        return productRepository.findBySku(sku)
-                .map(productMapper::toResponse)
-                .orElseThrow(() -> new ProductNotFoundException("Product not found with sku: " + sku));
-    }
 
-    @Override
     public List<ProductResponse> searchProductsByName(String name) {
         return productRepository.findByNameContainingIgnoreCase(name)
-                .stream().map(productMapper::toResponse).toList();
+                .stream().map(productMapper::toProductResponse).toList();
     }
 
 
-    @Override
-    public List<ProductResponse> getProductsByCategoryId(UUID categoryId) {
+
+    public List<ProductResponse> getProductsByCategoryId(Long categoryId) {
         return productRepository.findByCategoryId(categoryId)
-                .stream().map(productMapper::toResponse).toList();
+                .stream().map(productMapper::toProductResponse).toList();
     }
 
-    @Override
+
+
     public List<ProductResponse> getProductsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
         return productRepository.findByPriceRange(minPrice,maxPrice)
-                .stream().map(productMapper::toResponse).toList();
+                .stream().map(productMapper::toProductResponse).toList();
     }
 
-    @Override
+
+
     public List<ProductResponse> getProductsByCategoryName(String categoryName) {
         return productRepository.findByCategoryName(categoryName)
-                .stream().map(productMapper::toResponse).toList();
+                .stream().map(productMapper::toProductResponse).toList();
     }
 
-    @Override
-    public boolean existsBySku(String sku) {
-        return productRepository.existsBySku(sku);
-    }
 
-    @Override
-    public void updateProductStock(UUID productId, int quantity) {
+
+    public void updateProductStock(Long productId, int quantity) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + productId));
 
