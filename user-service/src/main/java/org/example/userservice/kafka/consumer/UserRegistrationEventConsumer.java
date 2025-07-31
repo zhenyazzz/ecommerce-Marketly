@@ -6,8 +6,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.example.userservice.kafka.event.UserRegistrationEvent;
 import org.example.userservice.model.Role;
 import org.example.userservice.model.User;
+import org.example.userservice.model.UserStatus;
 import org.example.userservice.repository.UserRepository;
-import org.example.userservice.service.UserService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +28,7 @@ public class UserRegistrationEventConsumer {
                 .username(event.getUsername())
                 .email(event.getUsername() + "@example.com")
                 .roles(event.getRoles().stream().map(Role::valueOf).collect(Collectors.toSet()))
-                .status("ACTIVE")
+                .status(UserStatus.ACTIVE)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();

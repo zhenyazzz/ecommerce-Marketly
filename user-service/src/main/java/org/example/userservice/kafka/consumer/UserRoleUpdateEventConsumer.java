@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.example.userservice.kafka.event.UserRoleUpdateEvent;
 import org.example.userservice.model.Role;
-import org.example.userservice.model.User;
 import org.example.userservice.repository.UserRepository;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;

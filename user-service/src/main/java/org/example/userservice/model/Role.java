@@ -1,6 +1,8 @@
 package org.example.userservice.model;
 
 public enum Role {
-    USER,
-    ADMIN
-} 
+    ROLE_USER,
+    ROLE_ADMIN,
+    ROLE_MODERATOR,
+    ROLE_SUPPORT
+}
