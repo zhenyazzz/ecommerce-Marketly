@@ -10,6 +10,7 @@ import org.com.productservice.exception.ProductNotFoundException;
 import org.com.productservice.model.Product;
 import org.com.productservice.repository.CategoryRepository;
 import org.com.productservice.repository.ProductRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ import java.util.List;
 
 
 @Service
-@RequiredArgsConstructor
+
 public class ProductService{
 
 
@@ -29,6 +30,18 @@ public class ProductService{
     private final ProductMapper productMapper;
     private final CategoryService categoryService;
 
+
+    @Autowired
+    public ProductService(ProductRepository productRepository,
+                          CategoryRepository categoryRepository,
+                          ProductMapper productMapper,
+                          CategoryService categoryService)
+    {
+        this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
+        this.productMapper = productMapper;
+        this.categoryService = categoryService;
+    }
 
     @Transactional
     public ProductResponse createProduct(ProductRequest request) {

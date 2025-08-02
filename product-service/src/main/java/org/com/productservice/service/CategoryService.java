@@ -12,6 +12,7 @@ import org.com.productservice.exception.InvalidCategoryHierarchyException;
 import org.com.productservice.model.Category;
 import org.com.productservice.repository.CategoryRepository;
 import org.com.productservice.repository.ProductRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,7 +26,7 @@ import java.util.List;
 
 
 @Service
-@RequiredArgsConstructor
+
 @Slf4j
 public class CategoryService{
 
@@ -33,6 +34,19 @@ public class CategoryService{
     private final ProductRepository productRepository;
     private final CategoryMapper categoryMapper;
     private final CacheManager cacheManager;
+
+
+    @Autowired
+    public CategoryService(CategoryRepository categoryRepository,
+                           ProductRepository productRepository,
+                           CategoryMapper categoryMapper,
+                           CacheManager cacheManager)
+    {
+        this.categoryRepository = categoryRepository;
+        this.productRepository = productRepository;
+        this.categoryMapper = categoryMapper;
+        this.cacheManager = cacheManager;
+    }
 
     //--- Основные CRUD операции ---//
   
