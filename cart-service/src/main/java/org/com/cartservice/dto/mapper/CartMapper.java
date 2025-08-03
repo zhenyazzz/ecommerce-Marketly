@@ -1,6 +1,5 @@
 package org.com.cartservice.dto.mapper;
 
-import org.com.cartservice.dto.request.UpdateCartRequest;
 import org.com.cartservice.dto.response.CartItemResponse;
 import org.com.cartservice.dto.response.CartResponse;
 import org.com.cartservice.dto.response.ProductDto;

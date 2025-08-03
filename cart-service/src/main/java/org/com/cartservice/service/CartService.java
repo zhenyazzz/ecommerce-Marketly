@@ -24,7 +24,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
 public class CartService {
     private final CartRepository cartRepository;
@@ -32,7 +31,7 @@ public class CartService {
     private final ProductServiceClient productServiceClient;
     private final CartCacheService cartCacheService;
 
-    // Добавить товар в корзину
+    @Transactional
     public CartResponse addItem(Long userId, AddItemRequest request) {
         // 1. Получаем активную корзину или создаем новую
         Cart cart = getOrCreateActiveCart(userId);
@@ -77,7 +76,7 @@ public class CartService {
         return cartResponse;
     }
 
-    // Удалить товар из корзины
+    @Transactional
     public void removeItem(Long userId, UUID productId) {
         Cart cart = getActiveCartOrThrow(userId);
         cart.removeItem(productId);
@@ -91,7 +90,7 @@ public class CartService {
         cartCacheService.updateCachedCart(userId, cartResponse);
     }
 
-    // Очистить корзину
+    @Transactional
     public void clearCart(Long userId) {
         Cart cart = getActiveCartOrThrow(userId);
         cart.getCartItems().clear();
@@ -106,7 +105,7 @@ public class CartService {
         cartCacheService.updateCachedCart(userId, cartResponse);
     }
 
-    // Получить активную корзину (с кешированием)
+    @Transactional(readOnly = true)
     public CartResponse getCart(Long userId) {
         // 1. Пробуем получить из кеша
         return cartCacheService.getCachedCart(userId)
@@ -122,7 +121,7 @@ public class CartService {
                 });
     }
 
-    // Получить историю корзин
+    @Transactional(readOnly = true)
     public List<CartResponse> getCartHistory(Long userId) {
         List<Cart> carts = cartRepository.findByUserIdOrderByCreatedAtDesc(userId);
         return carts.stream()

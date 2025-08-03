@@ -4,6 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -22,14 +23,18 @@ public class ProductRequest {
     @PositiveOrZero(message = "Price must be positive")
     private BigDecimal price;
 
-    @NotBlank(message = "SKU is required")
-    @Pattern(regexp = "^[A-Z0-9-]+$", message = "SKU format invalid")
-    private String sku;
-
     @NotNull(message = "Stock is required")
     @Min(value = 0, message = "Stock cannot be negative")
     private Integer stock;
 
     @NotNull(message = "Category ID is required")
-    private UUID categoryId;
+    private Long categoryId;
+
+    // ID изображения, которое станет основным
+    private String mainImage;
+
+    // список ID изображений
+    private List<String> images;
+
+    private boolean active;
 }

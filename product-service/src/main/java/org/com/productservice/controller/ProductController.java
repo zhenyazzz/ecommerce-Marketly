@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.com.productservice.dto.product.ProductDto;
 import org.com.productservice.dto.product.ProductRequest;
 import org.com.productservice.dto.product.ProductResponse;
-import org.com.productservice.service.impl.ProductService;
+import org.com.productservice.service.ProductService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
+
 
 @RestController
 @RequestMapping("/api/products")
@@ -33,11 +33,11 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getProductById(@PathVariable UUID id) {
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
     @GetMapping("/{id}/forCart")
-    public ProductDto getProductByIdForCart(@PathVariable UUID id) {
+    public ProductDto getProductByIdForCart(@PathVariable Long id) {
         return productService.getProductByIdForCart(id);
     }
 
@@ -46,25 +46,22 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProducts(pageable));
     }
     @PutMapping("{productId}/stock")
-    public void updateProductStock(@PathVariable UUID productId,
+    public void updateProductStock(@PathVariable Long productId,
                                    @RequestParam int quantity){
         productService.updateProductStock(productId,quantity);
     }
     @PutMapping("/{id}")
-    public ResponseEntity<ProductResponse> updateProduct(@PathVariable UUID id, @RequestBody @Valid ProductRequest request) {
+    public ResponseEntity<ProductResponse> updateProduct(@PathVariable Long id, @RequestBody @Valid ProductRequest request) {
         return ResponseEntity.ok(productService.updateProduct(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/sku/{sku}")
-    public ResponseEntity<ProductResponse> getProductBySku(@PathVariable String sku) {
-        return ResponseEntity.ok(productService.getProductBySku(sku));
-    }
+
 
     @GetMapping("/search")
     public ResponseEntity<List<ProductResponse>> searchProductsByName(@RequestParam String name) {
@@ -72,7 +69,7 @@ public class ProductController {
     }
 
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<ProductResponse>> getProductsByCategoryId(@PathVariable UUID categoryId) {
+    public ResponseEntity<List<ProductResponse>> getProductsByCategoryId(@PathVariable Long categoryId) {
         return ResponseEntity.ok(productService.getProductsByCategoryId(categoryId));
     }
 
