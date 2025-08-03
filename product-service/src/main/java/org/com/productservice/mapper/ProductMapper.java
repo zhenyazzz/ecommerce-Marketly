@@ -33,7 +33,7 @@ public abstract class ProductMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "images", qualifiedByName = "updateImages", ignore = true)
+    @Mapping(target = "images", expression = "java(new ArrayList<>(request.getImages()))")
     public abstract void updateProductFromProductRequest(ProductRequest request, @MappingTarget Product product);
 
     // Метод для поиска категории
