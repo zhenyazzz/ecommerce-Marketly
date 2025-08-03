@@ -24,47 +24,57 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
-    private UUID userId;
+    @NotNull
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
-    @OneToMany(
-            mappedBy = "order",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    private List<OrderItem> items = new ArrayList<>();
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private OrderStatus status;
 
+    @NotNull
+    @Column(name = "total", nullable = false, precision = 10, scale = 2)
+    private BigDecimal total;
+
+    @NotNull
+    @Column(name = "shipping_address", nullable = false)
+    private String shippingAddress;
+
+    @Column(name = "customer_notes")
+    private String customerNotes;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false)
+    private PaymentMethod paymentMethod;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "delivery_type", nullable = false)
+    private DeliveryType deliveryType;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private List<OrderItem> orderItems = new ArrayList<>();
+
+    @NotNull
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    public void addItem(OrderItem item) {
+        orderItems.add(item);
+        item.setOrder(this);
+    }
     @Transient
     public BigDecimal getTotal() {
-        if (items == null || items.isEmpty()) {
+        if (orderItems == null || orderItems.isEmpty()) {
             return BigDecimal.ZERO;
         }
-        return items.stream()
+        return orderItems.stream()
                 .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
-
-    @Enumerated(EnumType.STRING)
-    private OrderStatus status;
-
-    @CreationTimestamp
-    private Instant createdAt;
-
-    @Column(length = 500)
-    private String shippingAddress;
-
-    @Column(length = 1000)
-    private String customerNotes;
-    // Метод для добавления позиций
-    public void addItem(OrderItem item) {
-        items.add(item);
-        item.setOrder(this);
-    }
-
-
-
-    @NotNull(message = "Payment method is required")
-    PaymentMethod paymentMethod;
-
-    DeliveryType deliveryType;
 }

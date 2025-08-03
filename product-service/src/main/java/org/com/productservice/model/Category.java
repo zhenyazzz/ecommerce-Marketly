@@ -21,20 +21,13 @@ import java.util.UUID;
 public class Category {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @NotBlank(message = "Category name cannot be empty")
-    @Size(min = 2, max = 50, message = "Category name must be between 2 and 50 characters")
-    @Column(nullable = false)
     private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private Category parent;
-
-    @OneToMany(mappedBy = "parent")
-    private List<Category> children;
+    @OneToMany(mappedBy = "category")
+    private List<Product> products;
 
 
 }

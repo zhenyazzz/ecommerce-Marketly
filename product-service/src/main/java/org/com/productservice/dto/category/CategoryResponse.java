@@ -9,9 +9,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CategoryResponse {
-    private UUID id;
+    private Long id;
     private String name;
-    private UUID parentId;
-    private String parentName;
-    private int productCount;
 }

@@ -5,7 +5,7 @@ import org.com.orderservice.client.CartServiceClient;
 import org.com.orderservice.client.ProductServiceClient;
 import org.com.orderservice.dto.external.cart_service.CartResponse;
 import org.com.orderservice.dto.mapper.OrderMapper;
-import org.com.orderservice.dto.request.OrderRequest;
+import org.com.orderservice.dto.request.CreateOrderRequest;
 import org.com.orderservice.dto.response.OrderResponse;
 import org.com.orderservice.exception.OrderCancellationException;
 import org.com.orderservice.exception.OrderNotFoundException;
@@ -14,8 +14,6 @@ import org.com.orderservice.model.OrderItem;
 import org.com.orderservice.model.OrderStatus;
 import org.com.orderservice.repository.OrderItemRepository;
 import org.com.orderservice.repository.OrderRepository;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +31,7 @@ public class OrderService {
     private final OrderMapper orderMapper;
 
     @Transactional
-    public OrderResponse createOrder(UUID userId, OrderRequest request) {
+    public OrderResponse createOrder(Long userId, CreateOrderRequest request) {
         // 1. Получаем корзину из cart-service
         CartResponse cart = cartServiceClient.getCart(userId);
 
@@ -46,7 +44,7 @@ public class OrderService {
         order.setPaymentMethod(request.paymentMethod());
         order.setDeliveryType(request.deliveryType());
         // 3. Конвертируем товары из корзины в позиции заказа
-        List<OrderItem> items = cart.items().stream()
+        List<OrderItem> items = cart.cartItems().stream()
                 .map(cartItem -> {
                     OrderItem item = new OrderItem();
                     item.setProductId(cartItem.productId());
@@ -58,7 +56,7 @@ public class OrderService {
                 })
                 .toList();
 
-        order.setItems(items);
+        order.setOrderItems(items);
 
         // 4. Сохраняем заказ (каскадно сохранит OrderItem)
         Order savedOrder = orderRepository.save(order);
@@ -69,10 +67,9 @@ public class OrderService {
         // 6. Обновляем остатки товаров
         updateProductStocks(items);
 
-        return orderMapper.mapToResponse(order);
+        return orderMapper.toOrderResponse(order);
     }
 
-    @Cacheable(value = "orders", key = "#orderId")
     @Transactional(readOnly = true)
     public OrderResponse getOrder(UUID orderId, UUID userId) {
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
@@ -80,7 +77,6 @@ public class OrderService {
         return orderMapper.mapToResponse(order);
     }
 
-    @CacheEvict(value = "orders", key = "#orderId")
     @Transactional
     public void updateOrderStatus(UUID orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)
@@ -96,7 +92,6 @@ public class OrderService {
                 .toList();
     }
 
-    @CacheEvict(value = "orders", key = "#orderId")
     @Transactional
     public void cancelOrder(UUID orderId, UUID userId) {
         Order order = orderRepository.findByIdAndUserId(orderId, userId)

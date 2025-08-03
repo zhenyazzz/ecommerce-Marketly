@@ -1,6 +1,7 @@
 package org.com.orderservice.dto.response;
 
 import org.com.orderservice.model.DeliveryType;
+import org.com.orderservice.model.OrderStatus;
 import org.com.orderservice.model.PaymentMethod;
 
 import java.math.BigDecimal;
@@ -10,14 +11,14 @@ import java.util.UUID;
 
 public record OrderResponse(
         UUID orderId,
-        UUID userId,
-        String status,
+        Long userId,
+        OrderStatus status,
         BigDecimal totalAmount,
         Instant createdAt,
         String shippingAddress,
-        String paymentMethod,
-        String deliveryType,
-        List<OrderItemDto> items
+        PaymentMethod paymentMethod,
+        DeliveryType deliveryType,
+        List<OrderItemResponse> items
 ) {
 
 }

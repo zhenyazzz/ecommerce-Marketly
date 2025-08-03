@@ -17,9 +17,9 @@ import java.util.UUID;
 public interface CartServiceClient {
     @Operation(summary = "Get user cart")
     @GetMapping("/api/cart")
-    CartResponse getCart(@RequestHeader("X-User-Id") @NotNull UUID userId);
+    CartResponse getCart(@RequestHeader("X-User-Id") @NotNull Long userId);
 
     @Operation(summary = "Clear user cart")
     @DeleteMapping("/api/cart")
-    void clearCart(@RequestHeader("X-User-Id") @NotNull UUID userId);
+    void clearCart(@RequestHeader("X-User-Id") @NotNull Long userId);
 }

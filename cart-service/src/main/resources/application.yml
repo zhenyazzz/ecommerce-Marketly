@@ -2,17 +2,17 @@ spring:
   application:
     name: cart-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/cart_service_db
-    username: postgres
-    password: password
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:h2:mem:cart_service_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.H2Dialect
         format_sql: true
   cache:
     type: redis
@@ -61,7 +61,7 @@ feign:
 logging:
   level:
     org.springframework.cloud.openfeign: DEBUG
-    org.springframework.kafka: DEBUG
+#    org.springframework.kafka: DEBUG
     org.com.cartservice: DEBUG
 
 server:

@@ -4,19 +4,40 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.com.productservice.model.Category;
 
 import java.math.BigDecimal;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Builder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductDto{
-    UUID id;
-    String name;
-    BigDecimal price;
-    int stock;
+public class ProductDto {
+    private Long id;
+
+    private String name;
+
+    private String description;
+
+    private BigDecimal price;
+
+    private String mainImage;
+
+    private Category category;
+
+    private Integer stock;
+
+    @Builder.Default
+    private List<String> images = new ArrayList<>();
+
+    private boolean active;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 }
 
 
