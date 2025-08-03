@@ -53,7 +53,8 @@ public class Product {
     private Integer stock;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    private List<String> images =  new ArrayList<>();
+    @Builder.Default
+    private List<String> images = new ArrayList<>();
 
     private boolean active;
 

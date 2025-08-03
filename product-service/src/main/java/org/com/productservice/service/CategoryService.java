@@ -19,6 +19,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -103,7 +105,9 @@ public class CategoryService{
 
 
     @Transactional(readOnly = true)
-    public Page<CategoryResponse> getAllCategories(Pageable pageable) {
+    public Page<CategoryResponse> getAllCategories(
+            @PageableDefault(size = 10, sort = "name", direction = Sort.Direction.ASC)
+            Pageable pageable) {
         return categoryRepository.findAll(pageable)
                 .map(this::convertAndEnrichCategory);
     }

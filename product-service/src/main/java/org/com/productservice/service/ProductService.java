@@ -132,6 +132,10 @@ public class ProductService{
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + productId));
 
+        if (product.getStock() < quantity) {
+            throw new IllegalArgumentException("Insufficient stock. Available: " + product.getStock() + ", Requested: " + quantity);
+        }
+
         product.setStock(product.getStock() - quantity);
         productRepository.save(product);
     }
