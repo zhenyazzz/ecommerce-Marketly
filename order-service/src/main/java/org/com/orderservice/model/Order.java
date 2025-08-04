@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -25,7 +26,7 @@ public class Order {
     private UUID id;
 
     @Column(nullable = false)
-    private UUID userId;
+    private Long userId;
 
     @OneToMany(
             mappedBy = "order",
@@ -33,6 +34,30 @@ public class Order {
             orphanRemoval = true
     )
     private List<OrderItem> items = new ArrayList<>();
+
+
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    @CreationTimestamp
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    private Instant updatedAt;
+
+    @Column(length = 500)
+    private String shippingAddress;
+
+    @Column(length = 1000)
+    private String customerNotes;
+    // Метод для добавления позиций
+
+    @Column(length = 1000, nullable = false)
+    @NotNull(message = "Payment method is required")
+    PaymentMethod paymentMethod;
+
+    DeliveryType deliveryType;
 
     @Transient
     public BigDecimal getTotal() {
@@ -44,18 +69,6 @@ public class Order {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    @Enumerated(EnumType.STRING)
-    private OrderStatus status;
-
-    @CreationTimestamp
-    private Instant createdAt;
-
-    @Column(length = 500)
-    private String shippingAddress;
-
-    @Column(length = 1000)
-    private String customerNotes;
-    // Метод для добавления позиций
     public void addItem(OrderItem item) {
         items.add(item);
         item.setOrder(this);
@@ -63,8 +76,4 @@ public class Order {
 
 
 
-    @NotNull(message = "Payment method is required")
-    PaymentMethod paymentMethod;
-
-    DeliveryType deliveryType;
 }

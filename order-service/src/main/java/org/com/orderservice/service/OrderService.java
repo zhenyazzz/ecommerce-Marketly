@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.com.orderservice.client.CartServiceClient;
 import org.com.orderservice.client.ProductServiceClient;
 import org.com.orderservice.dto.external.cart_service.CartResponse;
-import org.com.orderservice.dto.mapper.OrderMapper;
-import org.com.orderservice.dto.request.OrderRequest;
-import org.com.orderservice.dto.response.OrderResponse;
+import org.com.orderservice.mapper.OrderMapper;
+import org.com.orderservice.dto.request.create.CreateOrderRequest;
+import org.com.orderservice.dto.order.OrderResponse;
 import org.com.orderservice.exception.OrderCancellationException;
 import org.com.orderservice.exception.OrderNotFoundException;
 import org.com.orderservice.model.Order;
@@ -33,7 +33,7 @@ public class OrderService {
     private final OrderMapper orderMapper;
 
     @Transactional
-    public OrderResponse createOrder(UUID userId, OrderRequest request) {
+    public OrderResponse createOrder(UUID userId, CreateOrderRequest request) {
         // 1. Получаем корзину из cart-service
         CartResponse cart = cartServiceClient.getCart(userId);
 

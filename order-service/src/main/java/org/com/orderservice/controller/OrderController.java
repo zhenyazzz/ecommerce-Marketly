@@ -6,8 +6,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.com.orderservice.dto.request.OrderRequest;
-import org.com.orderservice.dto.response.OrderResponse;
+import org.com.orderservice.dto.request.create.CreateOrderRequest;
+import org.com.orderservice.dto.order.OrderResponse;
 import org.com.orderservice.model.OrderStatus;
 import org.com.orderservice.service.OrderService;
 import org.springframework.http.HttpStatus;
@@ -30,7 +30,7 @@ public class OrderController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public ResponseEntity<OrderResponse> createOrder(
             @RequestHeader(name = "X-User-Id") @Parameter(description = "User ID") UUID userId,
-            @Valid @RequestBody OrderRequest request) {
+            @Valid @RequestBody CreateOrderRequest request) {
 
         log.info("Creating order for user: {}", userId);
         OrderResponse response = orderService.createOrder(userId, request);

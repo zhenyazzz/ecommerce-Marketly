@@ -24,6 +24,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -56,16 +57,19 @@ class ProductServiceTest {
     private ProductResponse testProductResponse;
     private ProductDto testProductDto;
     private Category testCategory;
-
+    private UUID productId;
+    
+    
+    
     @BeforeEach
     void setUp() {
         testCategory = Category.builder()
-                .id(1L)
+                //.id(1)
                 .name("Electronics")
                 .build();
 
         testProduct = Product.builder()
-                .id(1L)
+                //.id(1)
                 .name("iPhone 15")
                 .description("Latest iPhone model")
                 .price(new BigDecimal("999.99"))
@@ -84,7 +88,7 @@ class ProductServiceTest {
                 .build();
 
         testProductResponse = ProductResponse.builder()
-                .id(1L)
+                //.id(1L)
                 .name("iPhone 15")
                 .description("Latest iPhone model")
                 .price(new BigDecimal("999.99"))
@@ -94,7 +98,7 @@ class ProductServiceTest {
                 .build();
 
         testProductDto = ProductDto.builder()
-                .id(1L)
+                //.id(1L)
                 .name("iPhone 15")
                 .price(new BigDecimal("999.99"))
                 .stock(10)
@@ -125,44 +129,44 @@ class ProductServiceTest {
     @Test
     void getProductById_ShouldReturnProductResponse() {
         // Given
-        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
         when(productMapper.toProductResponse(testProduct)).thenReturn(testProductResponse);
 
         // When
-        ProductResponse result = productService.getProductById(1L);
+        ProductResponse result = productService.getProductById(productId);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getName()).isEqualTo("iPhone 15");
-        verify(productRepository).findById(1L);
+        verify(productRepository).findById(productId);
         verify(productMapper).toProductResponse(testProduct);
     }
 
     @Test
     void getProductById_ShouldThrowException_WhenProductNotFound() {
         // Given
-        when(productRepository.findById(999L)).thenReturn(Optional.empty());
+        when(productRepository.findById(UUID.randomUUID())).thenReturn(Optional.empty());
 
         // When & Then
-        assertThatThrownBy(() -> productService.getProductById(999L))
+        assertThatThrownBy(() -> productService.getProductById(UUID.randomUUID()))
                 .isInstanceOf(ProductNotFoundException.class)
                 .hasMessage("Product not found with id: 999");
-        verify(productRepository).findById(999L);
+        verify(productRepository).findById(UUID.randomUUID());
     }
 
     @Test
     void getProductByIdForCart_ShouldReturnProductDto() {
         // Given
-        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
         when(productMapper.toProductDto(testProduct)).thenReturn(testProductDto);
 
         // When
-        ProductDto result = productService.getProductByIdForCart(1L);
+        ProductDto result = productService.getProductByIdForCart(productId);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getName()).isEqualTo("iPhone 15");
-        verify(productRepository).findById(1L);
+        verify(productRepository).findById(productId);
         verify(productMapper).toProductDto(testProduct);
     }
 
@@ -172,7 +176,7 @@ class ProductServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         List<Product> products = Arrays.asList(testProduct);
         Page<Product> productPage = new PageImpl<>(products, pageable, 1);
-        
+
         when(productRepository.findAll(pageable)).thenReturn(productPage);
         when(productMapper.toProductResponse(testProduct)).thenReturn(testProductResponse);
 
@@ -200,7 +204,7 @@ class ProductServiceTest {
                 .build();
 
         ProductResponse updatedResponse = ProductResponse.builder()
-                .id(1L)
+                .id(productId)
                 .name("iPhone 15 Pro")
                 .description("Updated description")
                 .price(new BigDecimal("1199.99"))
@@ -209,19 +213,19 @@ class ProductServiceTest {
                 .active(true)
                 .build();
 
-        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
         when(categoryRepository.getCategoryById(1L)).thenReturn(testCategory);
         when(productRepository.save(testProduct)).thenReturn(testProduct);
         when(productMapper.toProductResponse(testProduct)).thenReturn(updatedResponse);
 
         // When
-        ProductResponse result = productService.updateProduct(1L, updateRequest);
+        ProductResponse result = productService.updateProduct(productId, updateRequest);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getName()).isEqualTo("iPhone 15 Pro");
         assertThat(result.getPrice()).isEqualTo(new BigDecimal("1199.99"));
-        verify(productRepository).findById(1L);
+        verify(productRepository).findById(productId);
         verify(productMapper).updateProductFromProductRequest(updateRequest, testProduct);
         verify(categoryRepository).getCategoryById(1L);
         verify(productRepository).save(testProduct);
@@ -231,38 +235,38 @@ class ProductServiceTest {
     @Test
     void updateProduct_ShouldThrowException_WhenProductNotFound() {
         // Given
-        when(productRepository.findById(999L)).thenReturn(Optional.empty());
+        when(productRepository.findById(UUID.randomUUID())).thenReturn(Optional.empty());
 
         // When & Then
-        assertThatThrownBy(() -> productService.updateProduct(999L, testProductRequest))
+        assertThatThrownBy(() -> productService.updateProduct(UUID.randomUUID(), testProductRequest))
                 .isInstanceOf(ProductNotFoundException.class)
                 .hasMessage("Product not found with id: 999");
-        verify(productRepository).findById(999L);
+        verify(productRepository).findById(UUID.randomUUID());
     }
 
     @Test
     void deleteProduct_ShouldDeleteProduct() {
         // Given
-        when(productRepository.existsById(1L)).thenReturn(true);
+        when(productRepository.existsById(productId)).thenReturn(true);
 
         // When
-        productService.deleteProduct(1L);
+        productService.deleteProduct(productId);
 
         // Then
-        verify(productRepository).existsById(1L);
-        verify(productRepository).deleteById(1L);
+        verify(productRepository).existsById(productId);
+        verify(productRepository).deleteById(productId);
     }
 
     @Test
     void deleteProduct_ShouldThrowException_WhenProductNotFound() {
         // Given
-        when(productRepository.existsById(999L)).thenReturn(false);
+        when(productRepository.existsById(UUID.randomUUID())).thenReturn(false);
 
         // When & Then
-        assertThatThrownBy(() -> productService.deleteProduct(999L))
+        assertThatThrownBy(() -> productService.deleteProduct(UUID.randomUUID()))
                 .isInstanceOf(ProductNotFoundException.class)
                 .hasMessage("Product not found with id: 999");
-        verify(productRepository).existsById(999L);
+        verify(productRepository).existsById(UUID.randomUUID());
     }
 
     @Test
@@ -305,7 +309,7 @@ class ProductServiceTest {
         BigDecimal minPrice = new BigDecimal("500");
         BigDecimal maxPrice = new BigDecimal("1000");
         List<Product> products = Arrays.asList(testProduct);
-        
+
         when(productRepository.findByPriceRange(minPrice, maxPrice)).thenReturn(products);
         when(productMapper.toProductResponse(testProduct)).thenReturn(testProductResponse);
 
@@ -339,40 +343,40 @@ class ProductServiceTest {
     @Test
     void updateProductStock_ShouldUpdateStock() {
         // Given
-        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
         when(productRepository.save(testProduct)).thenReturn(testProduct);
 
         // When
-        productService.updateProductStock(1L, 3);
+        productService.updateProductStock(productId, 3);
 
         // Then
         assertThat(testProduct.getStock()).isEqualTo(7); // 10 - 3
-        verify(productRepository).findById(1L);
+        verify(productRepository).findById(productId);
         verify(productRepository).save(testProduct);
     }
 
     @Test
     void updateProductStock_ShouldThrowException_WhenProductNotFound() {
         // Given
-        when(productRepository.findById(999L)).thenReturn(Optional.empty());
+        when(productRepository.findById(UUID.randomUUID())).thenReturn(Optional.empty());
 
         // When & Then
-        assertThatThrownBy(() -> productService.updateProductStock(999L, 3))
+        assertThatThrownBy(() -> productService.updateProductStock(UUID.randomUUID(), 3))
                 .isInstanceOf(ProductNotFoundException.class)
                 .hasMessage("Product not found with id: 999");
-        verify(productRepository).findById(999L);
+        verify(productRepository).findById(UUID.randomUUID());
     }
 
     @Test
     void updateProductStock_ShouldThrowException_WhenInsufficientStock() {
         // Given
-        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
 
         // When & Then - пытаемся заказать больше, чем есть в наличии
-        assertThatThrownBy(() -> productService.updateProductStock(1L, 15))
+        assertThatThrownBy(() -> productService.updateProductStock(productId, 15))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Insufficient stock. Available: 10, Requested: 15");
-        verify(productRepository).findById(1L);
+        verify(productRepository).findById(productId);
         // Не должно быть вызова save, так как исключение выбрасывается раньше
     }
-} 
+}
