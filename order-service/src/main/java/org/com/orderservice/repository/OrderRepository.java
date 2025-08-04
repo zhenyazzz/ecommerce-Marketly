@@ -9,9 +9,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
-    List<Order> findByUserId(UUID userId);
+    List<Order> findByUserId(Long userId);
 
     // Найти заказы по статусу
     List<Order> findByStatus(OrderStatus status);
-    Optional<Order> findByIdAndUserId(UUID id, UUID userId);
+
+
+    Optional<Order> findByIdAndUserId(UUID id, Long userId);
 }

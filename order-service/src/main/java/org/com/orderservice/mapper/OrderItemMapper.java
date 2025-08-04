@@ -5,7 +5,11 @@ import org.com.orderservice.dto.request.update.UpdateOrderItemRequest;
 import org.com.orderservice.dto.response.OrderItemResponse;
 import org.com.orderservice.model.OrderItem;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
+
+//TODO: complete in need
 @Mapper(componentModel = "spring")
 public interface OrderItemMapper {
 
@@ -15,5 +19,12 @@ public interface OrderItemMapper {
     public UpdateOrderItemRequest toUpdateOrderItemRequest(OrderItem orderItem);
 
     public OrderItemResponse toOrderItemResponse(OrderItem orderItem);
+
+
+    public void updateOrderItemFromOrderItemRequest(UpdateOrderItemRequest request, @MappingTarget OrderItem orderItem);
+
+
+
+
 
 }

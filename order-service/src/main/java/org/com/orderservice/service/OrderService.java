@@ -4,9 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.com.orderservice.client.CartServiceClient;
 import org.com.orderservice.client.ProductServiceClient;
 import org.com.orderservice.dto.external.cart_service.CartResponse;
+import org.com.orderservice.dto.response.OrderResponse;
 import org.com.orderservice.mapper.OrderMapper;
 import org.com.orderservice.dto.request.create.CreateOrderRequest;
-import org.com.orderservice.dto.order.OrderResponse;
+
 import org.com.orderservice.exception.OrderCancellationException;
 import org.com.orderservice.exception.OrderNotFoundException;
 import org.com.orderservice.model.Order;
@@ -33,7 +34,8 @@ public class OrderService {
     private final OrderMapper orderMapper;
 
     @Transactional
-    public OrderResponse createOrder(UUID userId, CreateOrderRequest request) {
+    public OrderResponse createOrder(Long userId, CreateOrderRequest request
+    ){
         // 1. Получаем корзину из cart-service
         CartResponse cart = cartServiceClient.getCart(userId);
 
@@ -41,10 +43,12 @@ public class OrderService {
         Order order = new Order();
         order.setUserId(userId);
         order.setStatus(OrderStatus.CREATED);
-        order.setShippingAddress(request.shippingAddress());
+
+        //TODO: make correct building
+        /*order.setShippingAddress(request.shippingAddress());
         order.setCustomerNotes(request.customerNotes());
         order.setPaymentMethod(request.paymentMethod());
-        order.setDeliveryType(request.deliveryType());
+        order.setDeliveryType(request.deliveryType());*/
         // 3. Конвертируем товары из корзины в позиции заказа
         List<OrderItem> items = cart.items().stream()
                 .map(cartItem -> {
@@ -69,36 +73,52 @@ public class OrderService {
         // 6. Обновляем остатки товаров
         updateProductStocks(items);
 
-        return orderMapper.mapToResponse(order);
+        return orderMapper.toOrderResponse(order);
     }
+
+
+
 
     @Cacheable(value = "orders", key = "#orderId")
     @Transactional(readOnly = true)
-    public OrderResponse getOrder(UUID orderId, UUID userId) {
+    public OrderResponse getOrder(UUID orderId, Long userId
+    ){
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new OrderNotFoundException("Order with id " + orderId + " not found"));
-        return orderMapper.mapToResponse(order);
+        return orderMapper.toOrderResponse(order);
     }
+
+
+
 
     @CacheEvict(value = "orders", key = "#orderId")
     @Transactional
-    public void updateOrderStatus(UUID orderId, OrderStatus status) {
+    public void updateOrderStatus(UUID orderId, OrderStatus status
+    ){
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order with id " + orderId + " not found"));
         order.setStatus(status);
         orderRepository.save(order);
     }
 
+
+
+
     @Transactional(readOnly = true)
-    public List<OrderResponse> getUserOrders(UUID userId) {
+    public List<OrderResponse> getUserOrders(Long userId
+    ){
         return orderRepository.findByUserId(userId).stream()
-                .map(orderMapper::mapToResponse)
+                .map(orderMapper::toOrderResponse)
                 .toList();
     }
 
+
+
+
     @CacheEvict(value = "orders", key = "#orderId")
     @Transactional
-    public void cancelOrder(UUID orderId, UUID userId) {
+    public void cancelOrder(UUID orderId, Long userId
+    ){
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new OrderNotFoundException("Order with id " + orderId + " not found"));
 
@@ -113,13 +133,19 @@ public class OrderService {
         returnProductStocks(order.getItems());
     }
 
-    private BigDecimal calculateTotal(List<OrderItem> items) {
+
+
+    private BigDecimal calculateTotal(List<OrderItem> items
+    ){
         return items.stream()
                 .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private void updateProductStocks(List<OrderItem> items) {
+
+
+    private void updateProductStocks(List<OrderItem> items
+    ){
         items.forEach(item ->
                 productServiceClient.updateStock(
                         item.getProductId(),
@@ -128,7 +154,10 @@ public class OrderService {
         );
     }
 
-    private void returnProductStocks(List<OrderItem> items) {
+
+
+    private void returnProductStocks(List<OrderItem> items
+    ){
         items.forEach(item ->
                 productServiceClient.updateStock(
                         item.getProductId(),
