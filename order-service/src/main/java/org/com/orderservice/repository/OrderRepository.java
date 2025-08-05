@@ -11,6 +11,8 @@ import java.util.UUID;
 public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findByUserId(Long userId);
 
+    List<Order> findByUserIdAndStatus(Long userId, OrderStatus status);
+
     // Найти заказы по статусу
     List<Order> findByStatus(OrderStatus status);
     Optional<Order> findByIdAndUserId(UUID id, Long userId);

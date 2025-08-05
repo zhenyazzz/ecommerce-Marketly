@@ -9,16 +9,28 @@ import java.util.UUID;
 
 @FeignClient(name = "product-service")
 public interface ProductServiceClient {
+
+
+
+
     @Operation(summary = "Update stock")
     @PutMapping("/api/products/{productId}/stock")
     void updateStock(
             @PathVariable UUID productId,
             @RequestParam int quantity
     );
+
+
+
+
     @Operation(summary = "Check product availability")
     @GetMapping("/api/products/{productId}/availability")
     ProductResponseDto checkAvailability(
             @PathVariable UUID productId,
             @RequestParam int requiredQuantity
     );
+
+
+
+
 }
