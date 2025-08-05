@@ -12,13 +12,13 @@ import java.util.UUID;
 @Slf4j
 public class CartServiceClientFallback implements CartServiceClient {
     @Override
-    public CartResponse getCart(UUID userId) {
+    public CartResponse getCart(Long userId) {
         log.error("Fallback: CartService unavailable");
         return new CartResponse(null, userId, List.of(),BigDecimal.ZERO);
     }
 
     @Override
-    public void clearCart(UUID userId) {
+    public void clearCart(Long userId) {
         log.error("Fallback: Cart clearance failed");
     }
 }

@@ -16,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductDto {
-    private Long id;
+    private UUID id;
 
     private String name;
 

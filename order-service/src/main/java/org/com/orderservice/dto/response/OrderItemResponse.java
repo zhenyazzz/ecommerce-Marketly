@@ -1,16 +1,21 @@
 package org.com.orderservice.dto.response;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import lombok.Builder;
+import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public record OrderItemResponse(
-        @NotNull UUID productId,
-        @NotNull String name,
-        @NotNull @Positive BigDecimal price,
-        @NotNull @Min(1) Integer quantity
-) {
+
+
+
+@Data
+@Builder
+public class OrderItemResponse {
+    private UUID id;
+    private UUID productId;
+    private String name;
+    private BigDecimal price;
+    private int quantity;
+
 }

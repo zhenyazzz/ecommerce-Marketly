@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 
 @Service
@@ -54,7 +55,7 @@ public class ProductService{
 
 
     @Transactional(readOnly = true)
-    public ProductResponse getProductById(Long id) {
+    public ProductResponse getProductById(UUID id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
         return productMapper.toProductResponse(product);
@@ -63,7 +64,7 @@ public class ProductService{
 
 
     @Transactional(readOnly = true)
-    public ProductDto getProductByIdForCart(Long id) {
+    public ProductDto getProductByIdForCart(UUID id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
         return productMapper.toProductDto(product);
@@ -78,7 +79,7 @@ public class ProductService{
 
 
     @Transactional
-    public ProductResponse updateProduct(Long id, ProductRequest request) {
+    public ProductResponse updateProduct(UUID id, ProductRequest request) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
         productMapper.updateProductFromProductRequest(request, product);
@@ -89,7 +90,7 @@ public class ProductService{
 
 
     @Transactional
-    public void deleteProduct(Long id) {
+    public void deleteProduct(UUID id) {
         if (!productRepository.existsById(id)) {
             throw new ProductNotFoundException("Product not found with id: " + id);
         }
@@ -126,7 +127,7 @@ public class ProductService{
 
 
 
-    public void updateProductStock(Long productId, int quantity) {
+    public void updateProductStock(UUID productId, int quantity) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + productId));
 
