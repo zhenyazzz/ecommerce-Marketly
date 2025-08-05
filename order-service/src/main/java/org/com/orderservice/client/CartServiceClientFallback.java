@@ -2,6 +2,7 @@ package org.com.orderservice.client;
 
 import lombok.extern.slf4j.Slf4j;
 import org.com.orderservice.dto.external.cart_service.CartResponse;
+import org.com.orderservice.dto.external.cart_service.CartStatus;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -14,7 +15,7 @@ public class CartServiceClientFallback implements CartServiceClient {
     @Override
     public CartResponse getCart(Long userId) {
         log.error("Fallback: CartService unavailable");
-        return new CartResponse(null, userId, List.of(),BigDecimal.ZERO);
+        return new CartResponse(null,List.of(),BigDecimal.ZERO, CartStatus.ABANDONED);
     }
 
     @Override

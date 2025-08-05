@@ -15,3 +15,36 @@ spring:
       port: 6379
 server:
   port: 8082
+  
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 2000
+        readTimeout: 3000
+
+resilience4j.retry:
+  instances:
+    productService:
+      max-attempts: 3
+      wait-duration: 500ms
+
+resilience4j.circuitbreaker:
+  instances:
+    productService:
+      slidingWindowSize: 10
+      failureRateThreshold: 50
+      waitDurationInOpenState: 10s
+
+kafka:
+  bootstrap-servers: localhost:9092
+  consumer:
+    group-id: order-service-group
+    auto-offset-reset: earliest
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    properties:
+      spring:
+        json:
+          trusted:
+            packages: '*'
