@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Marketly</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #2196F3;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 0 0 5px 5px;
+        }
+        .welcome-box {
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .button {
+            display: inline-block;
+            background-color: #2196F3;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome to Marketly!</h1>
+    </div>
+    
+    <div class="content">
+        <p>Dear <span th:text="${userName}">User</span>,</p>
+        
+        <p>Welcome to Marketly! We're thrilled to have you join our community of shoppers.</p>
+        
+        <div class="welcome-box">
+            <h3>Getting Started</h3>
+            <p>Your account has been successfully created. Here's what you can do next:</p>
+            <ul>
+                <li>Browse our extensive product catalog</li>
+                <li>Create your first order</li>
+                <li>Set up your delivery preferences</li>
+                <li>Explore our special offers</li>
+            </ul>
+        </div>
+        
+        <p>To get started, please verify your email address by clicking the button below:</p>
+        
+        <a href="http://localhost:3000/verify-email?token=${verificationToken}" class="button">Verify Email</a>
+        
+        <p>If you have any questions or need assistance, our customer support team is here to help!</p>
+        
+        <p>Happy shopping!<br>The Marketly Team</p>
+    </div>
+    
+    <div class="footer">
+        <p>This email was sent to <span th:text="${recipient}">user@example.com</span></p>
+        <p>© 2024 Marketly. All rights reserved.</p>
+    </div>
+</body>
+</html> 

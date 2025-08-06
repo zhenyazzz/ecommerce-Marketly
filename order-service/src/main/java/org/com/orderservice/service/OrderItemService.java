@@ -3,11 +3,11 @@ package org.com.orderservice.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.com.orderservice.dto.mapper.OrderMapper;
 import org.com.orderservice.dto.request.create.CreateOrderItemRequest;
 import org.com.orderservice.dto.request.update.UpdateOrderItemRequest;
 import org.com.orderservice.dto.response.OrderItemResponse;
 import org.com.orderservice.exception.OrderItemNotFoundException;
-import org.com.orderservice.mapper.OrderItemMapper;
 import org.com.orderservice.model.OrderItem;
 import org.com.orderservice.repository.OrderItemRepository;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,17 +24,14 @@ import java.util.stream.Collectors;
 public class OrderItemService {
 
     public final OrderItemRepository orderItemRepository;
-    public final OrderItemMapper orderItemMapper;
+    public final OrderMapper orderMapper;
 
 
 
     public List<OrderItemResponse> getAllOrderItems(
     ){
        List<OrderItem> orderItems = orderItemRepository.findAll();
-       return orderItems
-               .stream()
-               .map(orderItemMapper::toOrderItemResponse)
-               .collect(Collectors.toList());
+       return orderMapper.toOrderItemResponseList(orderItems);
    }
 
 
@@ -56,24 +53,8 @@ public class OrderItemService {
     ){
         OrderItem orderItem=buildOrderItemFromCreateRequest(request);
         OrderItem savedOrderItem = orderItemRepository.save(orderItem);
-        return orderItemMapper.toOrderItemResponse(savedOrderItem);
+        return orderMapper.toOrderItemResponse(savedOrderItem);
     }
-
-
-
-
-    @CachePut(value = "orderItems", key = "#orderItemId")
-    @Transactional
-    public OrderItemResponse updateOrderItem(UUID orderItemId, UpdateOrderItemRequest request
-    ){
-        OrderItem orderItem=orderItemRepository.findById(orderItemId)
-                .orElseThrow(()->new OrderItemNotFoundException("Order with id " + orderItemId + " not found"));
-        orderItemMapper.updateOrderItemFromOrderItemRequest(request,orderItem);
-
-        return orderItemMapper.toOrderItemResponse(orderItem);
-    }
-
-
 
 
     @CacheEvict(value = "orderItems", key = "#orderItemId")

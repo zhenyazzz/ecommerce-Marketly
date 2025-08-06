@@ -13,6 +13,7 @@ import org.com.orderservice.dto.request.UpdateOrderRequest;
 import org.com.orderservice.dto.response.OrderResponse;
 import org.com.orderservice.exception.OrderCancellationException;
 import org.com.orderservice.exception.OrderNotFoundException;
+import org.com.orderservice.kafka.KafkaProducerService;
 import org.com.orderservice.model.Order;
 import org.com.orderservice.model.OrderItem;
 import org.com.orderservice.model.OrderStatus;
@@ -34,6 +35,7 @@ public class OrderService {
     private final CartServiceClient cartServiceClient;
     private final ProductServiceClient productServiceClient;
     private final OrderMapper orderMapper;
+    private final KafkaProducerService kafkaProducerService;
 
 
 
@@ -90,6 +92,7 @@ public class OrderService {
         // 3. Сохраняем заказ (каскадно сохранит OrderItem)
         Order savedOrder = orderRepository.save(order);
 
+        kafkaProducerService.sendOrderCreatedEvent(orderMapper.tOrderPaymentEvent(order));
         // 4. Очищаем корзину
         cartServiceClient.clearCart(userId);
 
