@@ -5,6 +5,7 @@ import org.com.orderservice.dto.request.CreateOrderRequest;
 import org.com.orderservice.dto.request.UpdateOrderRequest;
 import org.com.orderservice.dto.response.OrderItemResponse;
 import org.com.orderservice.dto.response.OrderResponse;
+import org.com.orderservice.kafka.OrderPaymentEvent;
 import org.com.orderservice.dto.external.cart_service.CartItemResponse;
 import org.com.orderservice.model.Order;
 import org.com.orderservice.model.OrderItem;
@@ -71,4 +72,12 @@ public interface OrderMapper {
             @Mapping(target = "quantity", source = "quantity")
     })
     ProductStockUpdateRequest toProductStockUpdateRequest(OrderItem orderItem);
+
+    @Mappings({
+        @Mapping(target = "orderId", source = "id"),
+        @Mapping(target = "userId", source = "userId"),
+        @Mapping(target = "total", source = "total"),
+        @Mapping(target = "paymentMethod", source = "paymentMethod")
+})
+    OrderPaymentEvent tOrderPaymentEvent(Order order);
 }
