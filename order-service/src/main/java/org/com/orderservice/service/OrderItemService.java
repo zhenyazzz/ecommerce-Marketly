@@ -37,7 +37,6 @@ public class OrderItemService {
 
 
 
-    @Cacheable(value = "orderItems", key = "#orderItemId")
     public OrderItem getOrderItem(UUID orderItemId
     ){
         OrderItem orderItem=orderItemRepository.findById(orderItemId)
@@ -57,7 +56,6 @@ public class OrderItemService {
     }
 
 
-    @CacheEvict(value = "orderItems", key = "#orderItemId")
     @Transactional
     public void deleteOrderItem(UUID orderItemId
     ){

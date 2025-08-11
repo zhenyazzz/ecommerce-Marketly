@@ -49,17 +49,82 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka-broker:29092'
       SCHEMA_REGISTRY_LISTENERS: http://kafka-schema-registry:8081
 
+  eureka-service:
+    build:
+      context: ./eureka-service
+      dockerfile: Dockerfile
+    container_name: eureka-service
+    ports:
+      - "${EUREKA_PORT}:${EUREKA_PORT}"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${EUREKA_PROFILE}
+      - EUREKA_INSTANCE_HOSTNAME=${EUREKA_HOST}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_URL}
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:${EUREKA_PORT}/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - marketly-network
+
+  config-service:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    container_name: config-service
+    ports:
+      - "${CONFIG_PORT}:${CONFIG_PORT}"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${CONFIG_PROFILE}
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=${CONFIG_GIT_URI}
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL=${CONFIG_GIT_LABEL}
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "${CONFIG_HEALTH_URL}" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - eureka-service
+    networks:
+      - marketly-network
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - CONFIG_SERVER_URI=${CONFIG_SERVER_URI}
+    depends_on:
+      - eureka-service
+      - config-service
+    networks:
+      - marketly-network
+
   postgres:
     image: postgres:15
     container_name: postgres
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: marketly
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - marketly-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -68,20 +133,251 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-
-  notification-db:
-    image: postgres:15
-    container_name: notification-db
-    ports:
-      - "5433:5432"
     environment:
-      POSTGRES_DB: notification_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - notification_postgres_data:/var/lib/postgresql/data
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: redis-server --requirepass $${REDIS_PASSWORD}
+    networks:
+      - marketly-network
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      - CONFIG_SERVER_URI=${CONFIG_SERVER_URI}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_URL}
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - eureka-service
+      - config-service
+      - postgres
+      - kafka-broker
+    networks:
+      - marketly-network
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "8082:8082"
+    environment:
+      - CONFIG_SERVER_URI=http://config-service:8888
+      - EUREKA_SERVER_URL=http://eureka-service:8761/eureka/
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=marketly_user_db
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - KAFKA_SERVERS=kafka-broker:29092
+
+      - JWT_SECRET_KEY=aXv7j3tR8kL9mQp2sV5y7x9A1zC4E7H0bW3cZ6u8oP1dF4rT5nJ9iK2lO0q
+      - JWT_ACCESS_EXPIRATION=86400000
+      - JWT_REFRESH_EXPIRATION=2592000000
+      - JWT_ISSUER=auth-service
+      - JWT_HEADER=Authorization
+      - JWT_PREFIX=Bearer
+      - JWT_TOKEN_TYPE=JWT
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - eureka-service
+      - config-service
+      - postgres
+      - kafka-broker
+    networks:
+      - marketly-network
+################################################################3
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    container_name: product-service
+    ports:
+      - "8083:8083"
+    environment:
+      - CONFIG_SERVER_URI=http://config-service:8888
+      - EUREKA_SERVER_URL=http://eureka-service:8761/eureka/
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=marketly_product_db
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - KAFKA_SERVERS=kafka-broker:29092
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD
+    depends_on:
+      - eureka-service
+      - config-service
+      - redis
+      - postgres
+      - kafka-broker
+    networks:
+      - marketly-network
+
+
+  cart-service:
+    build:
+      context: ./cart-service
+      dockerfile: Dockerfile
+    container_name: cart-service
+    ports:
+      - "8084:8084"
+    environment:
+      - CONFIG_SERVER_URI=http://config-service:8888
+      - EUREKA_SERVER_URL=http://eureka-service:8761/eureka/
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=marketly_cart_db
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - KAFKA_SERVERS=kafka-broker:29092
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - eureka-service
+      - config-service
+      - postgres
+      - kafka-broker
+    networks:
+      - marketly-network
+
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: order-service
+    ports:
+      - "8085:8085"
+    environment:
+      - CONFIG_SERVER_URI=http://config-service:8888
+      - EUREKA_SERVER_URL=http://eureka-service:8761/eureka/
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=marketly_orders_db
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - KAFKA_SERVERS=kafka-broker:29092
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - eureka-service
+      - config-service
+      - postgres
+      - kafka-broker
+    networks:
+      - marketly-network
+
+
+
+
+
+
+  
+#   auth-db:
+#   image: postgres:15
+#   container_name: auth-db
+#   ports:
+#     - "5434:5432"
+#   environment:
+#     POSTGRES_DB: marketly_user_db
+#     POSTGRES_USER: postgres
+#     POSTGRES_PASSWORD: postgres
+#   volumes:
+#     - auth_postgres_data:/var/lib/postgresql/data
+#   networks:
+#     - marketly-network
+
+# # БД для заказов (order-service)
+# order-db:
+#   image: postgres:15
+#   container_name: order-db
+#   ports:
+#     - "5435:5432"
+#   environment:
+#     POSTGRES_DB: marketly_order_db
+#     POSTGRES_USER: postgres
+#     POSTGRES_PASSWORD: postgres
+#   volumes:
+#     - order_postgres_data:/var/lib/postgresql/data
+#   networks:
+#     - marketly-network
+
+# # БД для продуктов (product-service)
+# product-db:
+#   image: postgres:15
+#   container_name: product-db
+#   ports:
+#     - "5436:5432"
+#   environment:
+#     POSTGRES_DB: marketly_product_db
+#     POSTGRES_USER: postgres
+#     POSTGRES_PASSWORD: postgres
+#   volumes:
+#     - product_postgres_data:/var/lib/postgresql/data
+#   networks:
+#     - marketly-network
+
+# # БД для корзины (cart-service)
+# cart-db:
+#   image: postgres:15
+#   container_name: cart-db
+#   ports:
+#     - "5437:5432"
+#   environment:
+#     POSTGRES_DB: marketly_cart_db
+#     POSTGRES_USER: postgres
+#     POSTGRES_PASSWORD: postgres
+#   volumes:
+#     - cart_postgres_data:/var/lib/postgresql/data
+#   networks:
+#     - marketly-network
+
+# # БД для платежей (payment-service)
+# payment-db:
+#   image: postgres:15
+#   container_name: payment-db
+#   ports:
+#     - "5438:5432"
+#   environment:
+#     POSTGRES_DB: marketly_payment_db
+#     POSTGRES_USER: postgres
+#     POSTGRES_PASSWORD: postgres
+#   volumes:
+#     - payment_postgres_data:/var/lib/postgresql/data
+#   networks:
+#     - marketly-network
+
+networks:
+  marketly-network:
+    driver: bridge
 
 volumes:
   postgres_data:
   redis_data:
-  notification_postgres_data:
