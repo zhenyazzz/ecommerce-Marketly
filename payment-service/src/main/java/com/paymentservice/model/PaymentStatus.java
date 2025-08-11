@@ -1,5 +1,5 @@
 package com.paymentservice.model;
 
 public enum PaymentStatus {
-    CREATED, PROCESSING, SUCCESS, FAILED, CANCELLED, COMPLETED
+    CREATED, PROCESSING, SUCCESS, FAILED, CANCELLED, PENDING, COMPLETED
 }

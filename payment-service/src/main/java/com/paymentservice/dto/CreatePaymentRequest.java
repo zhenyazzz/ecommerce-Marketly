@@ -1,5 +1,6 @@
 package com.paymentservice.dto;
 
+import com.paymentservice.model.PaymentMethod;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -11,7 +12,8 @@ public record CreatePaymentRequest(
 
     UUID orderId,
     Long userId,
-    BigDecimal amount
+    BigDecimal amount,
+    PaymentMethod paymentMethod
 
 ) {
 }

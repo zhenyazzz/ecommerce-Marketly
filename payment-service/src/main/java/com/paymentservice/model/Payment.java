@@ -36,6 +36,11 @@ public class Payment {
     @Column(name = "status")
     PaymentStatus status;
 
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false)
+    private PaymentMethod paymentMethod;
+
     @NotNull(message = "creation time must be present")
     @Column(name = "createdAt")
     Instant createdAt ;
