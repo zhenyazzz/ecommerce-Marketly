@@ -1,25 +1,27 @@
-
-# config:
-#     import: "optional:configserver:http://localhost:8888"
-
 server:
-  port: 8761
-
+  port: ${EUREKA_PORT:8761}
 spring:
   application:
     name: eureka-service
-
+  spring:
+    cloud:
+      config:
+        enabled: false
 eureka:
   instance:
-    hostname: localhost
+    hostname: ${EUREKA_HOST:localhost}
+    prefer-ip-address: true
   client:
     fetch-registry: false
     register-with-eureka: false
     service-url:
-      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
-  server:
-    wait-time-in-ms-when-sync-empty: 0
-logging:
-  level:
-    com.netflix.eureka: OFF
-    com.netflix.discovery: OFF
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

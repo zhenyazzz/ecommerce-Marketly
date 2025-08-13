@@ -16,13 +16,13 @@ public class JwtUtil {
 
     private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
 
-    @Value("${jwt.secret-key}")
+    @Value("${JWT_SECRET_KEY:aXv7j3tR8kL9mQp2sV5y7x9A1zC4E7H0bW3cZ6u8oP1dF4rT5nJ9iK2lO0q}")
     private String secretKey;
 
-    @Value("${jwt.access-token-expiration}")
+    @Value("${jwt.access-token-expiration:86400000}")
     private Long accessTokenExpiration;
 
-    @Value("${jwt.issuer}")
+    @Value("${jwt.issuer:auth-service}")
     private String issuer;
 
     private SecretKey getSigningKey() {
