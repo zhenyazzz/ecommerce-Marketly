@@ -9,7 +9,7 @@ spring:
         enabled: false
 eureka:
   instance:
-    hostname: ${EUREKA_HOST:localhost}
+    hostname: ${EUREKA_HOST:eureka-service}
     prefer-ip-address: true
   client:
     fetch-registry: false

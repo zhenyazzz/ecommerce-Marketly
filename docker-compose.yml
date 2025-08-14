@@ -1,60 +1,60 @@
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    hostname: zookeeper
-    container_name: zookeeper
-    ports:
-      - "2181:2181"
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 3000
-
-  kafka-broker:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: kafka-broker
-    ports:
-      - "9092:9092"
-      - "29092:29092"
-    depends_on:
-      - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
-  kafka-ui:
-    container_name: kafka-ui
-    image: provectuslabs/kafka-ui:latest
-    ports:
-      - "8084:8080"
-    depends_on:
-      - kafka-broker
-    environment:
-      KAFKA_CLUSTERS_NAME: local
-      KAFKA_CLUSTERS_BOOTSTRAPSERVERS: kafka-broker:29092
-      DYNAMIC_CONFIG_ENABLED: 'true'
-
-  kafka-schema-registry:
-    image: confluentinc/cp-schema-registry:7.5.0
-    hostname: kafka-schema-registry
-    container_name: kafka-schema-registry
-    depends_on:
-      - kafka-broker
-    ports:
-      - "8083:8081"
-    environment:
-      SCHEMA_REGISTRY_HOST_NAME: kafka-schema-registry
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka-broker:29092'
-      SCHEMA_REGISTRY_LISTENERS: http://kafka-schema-registry:8081
+#  zookeeper:
+#    image: confluentinc/cp-zookeeper:7.5.0
+#    hostname: zookeeper
+#    container_name: zookeeper
+#    ports:
+#      - "2181:2181"
+#    environment:
+#      ZOOKEEPER_CLIENT_PORT: 2181
+#      ZOOKEEPER_TICK_TIME: 3000
+#
+#  kafka-broker:
+#    image: confluentinc/cp-kafka:7.5.0
+#    container_name: kafka-broker
+#    ports:
+#      - "9092:9092"
+#      - "29092:29092"
+#    depends_on:
+#      - zookeeper
+#    environment:
+#      KAFKA_BROKER_ID: 1
+#      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+#      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker:29092,PLAINTEXT_HOST://localhost:9092
+#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#
+#  kafka-ui:
+#    container_name: kafka-ui
+#    image: provectuslabs/kafka-ui:latest
+#    ports:
+#      - "8084:8080"
+#    depends_on:
+#      - kafka-broker
+#    environment:
+#      KAFKA_CLUSTERS_NAME: local
+#      KAFKA_CLUSTERS_BOOTSTRAPSERVERS: kafka-broker:29092
+#      DYNAMIC_CONFIG_ENABLED: 'true'
+#
+#  kafka-schema-registry:
+#    image: confluentinc/cp-schema-registry:7.5.0
+#    hostname: kafka-schema-registry
+#    container_name: kafka-schema-registry
+#    depends_on:
+#      - kafka-broker
+#    ports:
+#      - "8083:8081"
+#    environment:
+#      SCHEMA_REGISTRY_HOST_NAME: kafka-schema-registry
+#      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka-broker:29092'
+#      SCHEMA_REGISTRY_LISTENERS: http://kafka-schema-registry:8081
 
   eureka-service:
     build:
       context: ./eureka-service
       dockerfile: Dockerfile
     container_name: eureka-service
-    hostname: ${EUREKA_HOST}
+    hostname: eureka-service
     ports:
       - "${EUREKA_PORT}:${EUREKA_PORT}"
     environment:
@@ -103,8 +103,8 @@ services:
       - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
     environment:
       - API_GATEWAY_PORT=${API_GATEWAY_PORT}
-      - CONFIG_SERVER_URI=${CONFIG_SERVER_URI}
-      - EUREKA_URL=${EUREKA_URL}
+      - CONFIG_SERVER_URL=http://config-service:8888
+      - EUREKA_URL=http://eureka-service:8761/eureka/
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - JWT_ACCESS_EXPIRATION=${JWT_ACCESS_EXPIRATION}
       - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
@@ -114,203 +114,202 @@ services:
     networks:
       - marketly-network
 
-  postgres:
-    image: postgres:15
-    container_name: postgres
-    ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
-    environment:
-      POSTGRES_DB: ${POSTGRES_HOST}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-    networks:
-      - marketly-network
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+#  postgres:
+#    image: postgres:15
+#    container_name: postgres
+#    ports:
+#      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+#    environment:
+#      POSTGRES_DB: ${POSTGRES_HOST}
+#      POSTGRES_USER: ${POSTGRES_USER}
+#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+#      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+#    networks:
+#      - marketly-network
+#    healthcheck:
+#      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+#      interval: 5s
+#      timeout: 5s
+#      retries: 5
+#
+#  redis:
+#    image: redis:7-alpine
+#    container_name: redis
+#    ports:
+#      - "${REDIS_PORT}:${REDIS_PORT}"
+#    volumes:
+#      - redis_data:/data
+#    environment:
+#      - REDIS_PASSWORD=${REDIS_PASSWORD}
+#    command: redis-server --requirepass $${REDIS_PASSWORD}
+#    networks:
+#      - marketly-network
+#
+#  auth-service:
+#    build:
+#      context: ./auth-service
+#      dockerfile: Dockerfile
+#    container_name: auth-service
+#    ports:
+#      - "${AUTH_PORT}:${AUTH_PORT}"
+#    environment:
+#      - CONFIG_SERVER_URI=${CONFIG_SERVER_URI}
+#      - EUREKA_URL=${EUREKA_URL}
+#      - DATABASE_HOST=${POSTGRES_HOST}
+#      - DATABASE_PORT=${POSTGRES_PORT}
+#      - DATABASE_NAME=${AUTH_DB_NAME}
+#      - DATABASE_USER=${POSTGRES_USER}
+#      - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
+#      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+#      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+#      - JWT_ACCESS_EXPIRATION=${JWT_ACCESS_EXPIRATION}
+#      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 3
+#      start_period: 40s
+#    depends_on:
+#      - eureka-service
+#      - config-service
+#      - postgres
+#      - kafka-broker
+#    networks:
+#      - marketly-network
+#
+#  user-service:
+#    build:
+#      context: ./user-service
+#      dockerfile: Dockerfile
+#    container_name: user-service
+#    ports:
+#      - "${USER_PORT}:${USER_PORT}"
+#    environment:
+#      - CONFIG_SERVER_URI=${CONFIG_SERVER_URI}
+#      - EUREKA_URL=${EUREKA_URL}
+#      - DATABASE_HOST=${POSTGRES_HOST}
+#      - DATABASE_PORT=${POSTGRES_PORT}
+#      - DATABASE_NAME=${USER_DB_NAME}
+#      - DATABASE_USER=${POSTGRES_USER}
+#      - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
+#      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+#      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+#      - JWT_ACCESS_EXPIRATION=${JWT_ACCESS_EXPIRATION}
+#      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
+#      - JWT_ISSUER=auth-service
+#      - JWT_HEADER=Authorization
+#      - JWT_PREFIX=Bearer
+#      - JWT_TOKEN_TYPE=JWT
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 3
+#      start_period: 40s
+#    depends_on:
+#      - eureka-service
+#      - config-service
+#      - postgres
+#      - kafka-broker
+#    networks:
+#      - marketly-network
+#
+#  product-service:
+#    build:
+#      context: ./product-service
+#      dockerfile: Dockerfile
+#    container_name: product-service
+#    ports:
+#      - "${PRODUCT_PORT}:${PRODUCT_PORT}"
+#    environment:
+#      - PRODUCT_PORT=${PRODUCT_PORT}
+#      - CONFIG_SERVER_URI=${CONFIG_SERVER_URI}
+#      - EUREKA_URL=${EUREKA_SERVER_URL}
+#      - DATABASE_HOST=${POSTGRES_HOST}
+#      - DATABASE_PORT=${POSTGRES_PORT}
+#      - DATABASE_NAME=${PRODUCT_DB_NAME}
+#      - DATABASE_USER=${POSTGRES_USER}
+#      - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
+#      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+#      - REDIS_HOST=${REDIS_HOST}
+#      - REDIS_PORT=${REDIS_PORT}
+#      - REDIS_PASSWORD=${REDIS_PASSWORD}
+#    depends_on:
+#      - eureka-service
+#      - config-service
+#      - redis
+#      - postgres
+#      - kafka-broker
+#    networks:
+#      - marketly-network
+#
+#  cart-service:
+#    build:
+#      context: ./cart-service
+#      dockerfile: Dockerfile
+#    container_name: cart-service
+#    ports:
+#      - "${CART_PORT}:${CART_PORT}"
+#    environment:
+#      - CART_PORT=${CART_PORT}
+#      - CONFIG_SERVER_URI=${CONFIG_SERVER_URI}
+#      - EUREKA_SERVER_URL=${EUREKA_SERVER_URL}
+#      - DATABASE_HOST=${POSTGRES_HOST}
+#      - DATABASE_PORT=${POSTGRES_PORT}
+#      - DATABASE_NAME=${CART_DB_NAME}
+#      - DATABASE_USER=${POSTGRES_USER}
+#      - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
+#      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+#      - REDIS_HOST=${REDIS_HOST}
+#      - REDIS_PORT=${REDIS_PORT}
+#      - REDIS_PASSWORD=${REDIS_PASSWORD}
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost:${CART_PORT}/actuator/health" ]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 3
+#      start_period: 40s
+#    depends_on:
+#      - eureka-service
+#      - config-service
+#      - postgres
+#      - redis
+#      - kafka-broker
+#    networks:
+#      - marketly-network
+#
+#  order-service:
+#    build:
+#      context: ./order-service
+#      dockerfile: Dockerfile
+#    container_name: order-service
+#    ports:
+#      - "${ORDER_PORT}:${ORDER_PORT}"
+#    environment:
+#      - ORDER_PORT=${ORDER_PORT}
+#      - CONFIG_SERVER_URI=${CONFIG_SERVER_URI}
+#      - EUREKA_SERVER_URL=${EUREKA_SERVER_URL}
+#      - DATABASE_HOST=${POSTGRES_HOST}
+#      - DATABASE_PORT=${POSTGRES_PORT}
+#      - DATABASE_NAME=${ORDER_DB_NAME}
+#      - DATABASE_USER=${POSTGRES_USER}
+#      - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
+#      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost:${ORDER_PORT}/actuator/health" ]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 3
+#      start_period: 40s
+#    depends_on:
+#      - eureka-service
+#      - config-service
+#      - postgres
+#      - kafka-broker
 
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    ports:
-      - "${REDIS_PORT}:${REDIS_PORT}"
-    volumes:
-      - redis_data:/data
-    environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-    command: redis-server --requirepass $${REDIS_PASSWORD}
-    networks:
-      - marketly-network
-
-  auth-service:
-    build:
-      context: ./auth-service
-      dockerfile: Dockerfile
-    container_name: auth-service
-    ports:
-      - "${AUTH_PORT}:${AUTH_PORT}"
-    environment:
-      - CONFIG_SERVER_URI=${CONFIG_SERVER_URI}
-      - EUREKA_URL=${EUREKA_URL}
-      - DATABASE_HOST=${POSTGRES_HOST}
-      - DATABASE_PORT=${POSTGRES_PORT}
-      - DATABASE_NAME=${AUTH_DB_NAME}
-      - DATABASE_USER=${POSTGRES_USER}
-      - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
-      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - JWT_ACCESS_EXPIRATION=${JWT_ACCESS_EXPIRATION}
-      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    depends_on:
-      - eureka-service
-      - config-service
-      - postgres
-      - kafka-broker
-    networks:
-      - marketly-network
-
-  user-service:
-    build:
-      context: ./user-service
-      dockerfile: Dockerfile
-    container_name: user-service
-    ports:
-      - "${USER_PORT}:${USER_PORT}"
-    environment:
-      - CONFIG_SERVER_URI=${CONFIG_SERVER_URI}
-      - EUREKA_URL=${EUREKA_URL}
-      - DATABASE_HOST=${POSTGRES_HOST}
-      - DATABASE_PORT=${POSTGRES_PORT}
-      - DATABASE_NAME=${USER_DB_NAME}
-      - DATABASE_USER=${POSTGRES_USER}
-      - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
-      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - JWT_ACCESS_EXPIRATION=${JWT_ACCESS_EXPIRATION}
-      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
-      - JWT_ISSUER=auth-service
-      - JWT_HEADER=Authorization
-      - JWT_PREFIX=Bearer
-      - JWT_TOKEN_TYPE=JWT
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    depends_on:
-      - eureka-service
-      - config-service
-      - postgres
-      - kafka-broker
-    networks:
-      - marketly-network
-
-  product-service:
-    build:
-      context: ./product-service
-      dockerfile: Dockerfile
-    container_name: product-service
-    ports:
-      - "${PRODUCT_PORT}:${PRODUCT_PORT}"
-    environment:
-      - PRODUCT_PORT=${PRODUCT_PORT}
-      - CONFIG_SERVER_URI=${CONFIG_SERVER_URI}
-      - EUREKA_URL=${EUREKA_SERVER_URL}
-      - DATABASE_HOST=${POSTGRES_HOST}
-      - DATABASE_PORT=${POSTGRES_PORT}
-      - DATABASE_NAME=${PRODUCT_DB_NAME}
-      - DATABASE_USER=${POSTGRES_USER}
-      - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
-      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-    depends_on:
-      - eureka-service
-      - config-service
-      - redis
-      - postgres
-      - kafka-broker
-    networks:
-      - marketly-network
-
-  cart-service:
-    build:
-      context: ./cart-service
-      dockerfile: Dockerfile
-    container_name: cart-service
-    ports:
-      - "${CART_PORT}:${CART_PORT}"
-    environment:
-      - CART_PORT=${CART_PORT}
-      - CONFIG_SERVER_URI=${CONFIG_SERVER_URI}
-      - EUREKA_SERVER_URL=${EUREKA_SERVER_URL}
-      - DATABASE_HOST=${POSTGRES_HOST}
-      - DATABASE_PORT=${POSTGRES_PORT}
-      - DATABASE_NAME=${CART_DB_NAME}
-      - DATABASE_USER=${POSTGRES_USER}
-      - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
-      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:${CART_PORT}/actuator/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    depends_on:
-      - eureka-service
-      - config-service
-      - postgres
-      - redis
-      - kafka-broker
-    networks:
-      - marketly-network
-
-  order-service:
-    build:
-      context: ./order-service
-      dockerfile: Dockerfile
-    container_name: order-service
-    ports:
-      - "${ORDER_PORT}:${ORDER_PORT}"
-    environment:
-      - ORDER_PORT=${ORDER_PORT}
-      - CONFIG_SERVER_URI=${CONFIG_SERVER_URI}
-      - EUREKA_SERVER_URL=${EUREKA_SERVER_URL}
-      - DATABASE_HOST=${POSTGRES_HOST}
-      - DATABASE_PORT=${POSTGRES_PORT}
-      - DATABASE_NAME=${ORDER_DB_NAME}
-      - DATABASE_USER=${POSTGRES_USER}
-      - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
-      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:${ORDER_PORT}/actuator/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    depends_on:
-      - eureka-service
-      - config-service
-      - postgres
-      - kafka-broker
-    networks:
-      - marketly-network
 
 
 
@@ -391,7 +390,8 @@ services:
 #     - payment_postgres_data:/var/lib/postgresql/data
 #   networks:
 #     - marketly-network
-
+#    networks:
+#     - marketly-network
 networks:
   marketly-network:
     driver: bridge

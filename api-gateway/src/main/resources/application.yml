@@ -1,14 +1,10 @@
 spring:
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+  application:
+    name: api-gateway
   cloud:
     config:
-      uri: http://config-service:8888  # Или http://localhost:8888, если запускаете локально
-      fail-fast: true  # Будет падать, если Config Server недоступен
-      retry:
-        initial-interval: 2000
-        max-interval: 10000
-        max-attempts: 5
+      uri: ${CONFIG_SERVER_URL:http://localhost:8888}
+      fail-fast: false
 
-logging:
-  level:
-    org.springframework.cloud: DEBUG
-    org.springframework.web: DEBUG
