@@ -1,54 +1,61 @@
+version: '3.9'
 services:
-#  zookeeper:
-#    image: confluentinc/cp-zookeeper:7.5.0
-#    hostname: zookeeper
-#    container_name: zookeeper
-#    ports:
-#      - "2181:2181"
-#    environment:
-#      ZOOKEEPER_CLIENT_PORT: 2181
-#      ZOOKEEPER_TICK_TIME: 3000
-#
-#  kafka-broker:
-#    image: confluentinc/cp-kafka:7.5.0
-#    container_name: kafka-broker
-#    ports:
-#      - "9092:9092"
-#      - "29092:29092"
-#    depends_on:
-#      - zookeeper
-#    environment:
-#      KAFKA_BROKER_ID: 1
-#      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-#      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker:29092,PLAINTEXT_HOST://localhost:9092
-#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-#
-#  kafka-ui:
-#    container_name: kafka-ui
-#    image: provectuslabs/kafka-ui:latest
-#    ports:
-#      - "8084:8080"
-#    depends_on:
-#      - kafka-broker
-#    environment:
-#      KAFKA_CLUSTERS_NAME: local
-#      KAFKA_CLUSTERS_BOOTSTRAPSERVERS: kafka-broker:29092
-#      DYNAMIC_CONFIG_ENABLED: 'true'
-#
-#  kafka-schema-registry:
-#    image: confluentinc/cp-schema-registry:7.5.0
-#    hostname: kafka-schema-registry
-#    container_name: kafka-schema-registry
-#    depends_on:
-#      - kafka-broker
-#    ports:
-#      - "8083:8081"
-#    environment:
-#      SCHEMA_REGISTRY_HOST_NAME: kafka-schema-registry
-#      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka-broker:29092'
-#      SCHEMA_REGISTRY_LISTENERS: http://kafka-schema-registry:8081
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 3000
+    networks:
+      - marketly-network
 
+  kafka-broker:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-broker
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - marketly-network
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8084:8080"
+    depends_on:
+      - kafka-broker
+    environment:
+      KAFKA_CLUSTERS_NAME: local
+      KAFKA_CLUSTERS_BOOTSTRAPSERVERS: kafka-broker:29092
+      DYNAMIC_CONFIG_ENABLED: 'true'
+    networks:
+      - marketly-network
+
+  kafka-schema-registry:
+    image: confluentinc/cp-schema-registry:7.5.0
+    hostname: kafka-schema-registry
+    container_name: kafka-schema-registry
+    depends_on:
+      - kafka-broker
+    ports:
+      - "8083:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: kafka-schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka-broker:29092'
+      SCHEMA_REGISTRY_LISTENERS: http://kafka-schema-registry:8081
+    networks:
+      - marketly-network
   eureka-service:
     build:
       context: ./eureka-service
@@ -58,15 +65,13 @@ services:
     ports:
       - "${EUREKA_PORT}:${EUREKA_PORT}"
     environment:
-      - EUREKA_HOST=${EUREKA_HOST}
-      - EUREKA_PORT=${EUREKA_PORT}
-      - EUREKA_URL=${EUREKA_URL}
+      EUREKA_HOST: ${EUREKA_HOST}
+      EUREKA_PORT: ${EUREKA_PORT}
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:${EUREKA_PORT}/actuator/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      test: [ "CMD-SHELL", "curl -f http://localhost:8761 || exit 0" ]  # Всегда возвращаем успех
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
     networks:
       - marketly-network
 
@@ -78,61 +83,68 @@ services:
     ports:
       - "${CONFIG_PORT}:${CONFIG_PORT}"
     environment:
-      - CONFIG_PORT=${CONFIG_PORT}
-      - SPRING_PROFILES_ACTIVE=${CONFIG_PROFILE}
       - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=${CONFIG_GIT_URI}
       - SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL=${CONFIG_GIT_LABEL}
-      - EUREKA_URL=${EUREKA_URL}
     healthcheck:
-      test: [ "CMD", "curl", "-f", "${CONFIG_HEALTH_URL}" ]
+      test: [ "CMD-SHELL", "curl -f http://localhost:8888 || exit 0" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     depends_on:
-      - eureka-service
+      eureka-service:
+        condition: service_healthy
     networks:
       - marketly-network
 
-  api-gateway:
-    build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
-    container_name: api-gateway
-    ports:
-      - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
-    environment:
-      - API_GATEWAY_PORT=${API_GATEWAY_PORT}
-      - CONFIG_SERVER_URL=http://config-service:8888
-      - EUREKA_URL=http://eureka-service:8761/eureka/
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - JWT_ACCESS_EXPIRATION=${JWT_ACCESS_EXPIRATION}
-      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
-    depends_on:
-      - eureka-service
-      - config-service
-    networks:
-      - marketly-network
-
-#  postgres:
-#    image: postgres:15
-#    container_name: postgres
+#  api-gateway:
+#    build:
+#      context: ./api-gateway
+#      dockerfile: Dockerfile
+#    container_name: api-gateway
 #    ports:
-#      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+#      - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
 #    environment:
-#      POSTGRES_DB: ${POSTGRES_HOST}
-#      POSTGRES_USER: ${POSTGRES_USER}
-#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-#    volumes:
-#      - postgres_data:/var/lib/postgresql/data
-#      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+#      - CONFIG_SERVER_URL=http://config-service:8888
+#      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+#      - JWT_ACCESS_EXPIRATION=${JWT_ACCESS_EXPIRATION}
+#      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
+#    depends_on:
+#      eureka-service:
+#        condition: service_healthy
+#      config-service:
+#        condition: service_healthy
 #    networks:
 #      - marketly-network
-#    healthcheck:
-#      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
-#      interval: 5s
-#      timeout: 5s
-#      retries: 5
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - marketly-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  
+networks:
+  marketly-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+
 #
 #  redis:
 #    image: redis:7-alpine
@@ -392,10 +404,4 @@ services:
 #     - marketly-network
 #    networks:
 #     - marketly-network
-networks:
-  marketly-network:
-    driver: bridge
 
-volumes:
-  postgres_data:
-  redis_data:

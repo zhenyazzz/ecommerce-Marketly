@@ -2,6 +2,7 @@ package org.com.apigateway.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.io.Decoders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +27,7 @@ public class JwtUtil {
     private String issuer;
 
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secretKey.getBytes());
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
     }
 
     public boolean validateJwtToken(String token) {
@@ -50,7 +51,7 @@ public class JwtUtil {
         return false;
     }
 
-    public String getUsernameFromJwtToken(String token) {
+    public String getUsername(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
@@ -59,7 +60,7 @@ public class JwtUtil {
                 .getSubject();
     }
 
-    public Long getUserIdFromJwtToken(String token) {
+    public Long getUserId(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
@@ -69,7 +70,7 @@ public class JwtUtil {
         return claims.get("userId", Long.class);
     }
 
-    public List<String> getRolesFromJwtToken(String token) {
+    public List<String> getRoles(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()

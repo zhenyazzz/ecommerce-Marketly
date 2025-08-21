@@ -1,10 +1,19 @@
 spring:
-  config:
-    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
   application:
     name: api-gateway
-  cloud:
-    config:
-      uri: ${CONFIG_SERVER_URL:http://localhost:8888}
-      fail-fast: false
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    registerWithEureka: true
+    fetchRegistry: true
+  instance:
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:api-gateway}
+    preferIpAddress: false
+
+server:
+  port: ${API_GATEWAY_PORT:8080}
 
