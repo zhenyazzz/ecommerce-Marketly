@@ -47,7 +47,7 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProducts(pageable));
     }
     @PutMapping("{productId}/stock")
-    public void updateProductStock(@PathVariable Long productId,
+    public void updateProductStock(@PathVariable UUID productId,
                                    @RequestParam int quantity){
         productService.updateProductStock(productId,quantity);
     }
