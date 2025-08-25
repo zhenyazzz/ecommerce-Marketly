@@ -37,24 +37,38 @@ public class ProductController {
     public ResponseEntity<ProductResponse> getProductById(@PathVariable UUID id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
-    @GetMapping("/{id}/forCart")
+
+
+  /*  @GetMapping("/{id}/forCart")
     public ProductDto getProductByIdForCart(@PathVariable UUID id) {
         return productService.getProductByIdForCart(id);
+    }*/
+
+    @GetMapping("/{id}/forCart")
+    public ProductResponse getProductByIdForCart(@PathVariable UUID id) {
+        return productService.getProductByIdForCart(id);
     }
+
 
     @GetMapping("/all")
     public ResponseEntity<Page<ProductResponse>> getAllProducts(Pageable pageable) {
         return ResponseEntity.ok(productService.getAllProducts(pageable));
     }
+
+
     @PutMapping("{productId}/stock")
     public void updateProductStock(@PathVariable UUID productId,
                                    @RequestParam int quantity){
         productService.updateProductStock(productId,quantity);
     }
+
+
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> updateProduct(@PathVariable UUID id, @RequestBody @Valid ProductRequest request) {
         return ResponseEntity.ok(productService.updateProduct(id, request));
     }
+
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable UUID id) {
@@ -69,15 +83,21 @@ public class ProductController {
         return ResponseEntity.ok(productService.searchProductsByName(name));
     }
 
+
+
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<ProductResponse>> getProductsByCategoryId(@PathVariable Long categoryId) {
         return ResponseEntity.ok(productService.getProductsByCategoryId(categoryId));
     }
 
+
+
     @GetMapping("/category/name")
     public ResponseEntity<List<ProductResponse>> getProductsByCategoryName(@RequestParam String categoryName) {
         return ResponseEntity.ok(productService.getProductsByCategoryName(categoryName));
     }
+
+
 
     @GetMapping("/price-range")
     public ResponseEntity<List<ProductResponse>> getProductsByPriceRange(@RequestParam BigDecimal minPrice, @RequestParam BigDecimal maxPrice) {

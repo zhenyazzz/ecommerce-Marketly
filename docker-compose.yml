@@ -118,6 +118,28 @@ services:
   #      - marketly-network
 
 
+#  redis:
+#    image: redis:7-alpine
+#    container_name: redis
+#    ports:
+#      - "${REDIS_PORT}:${REDIS_PORT}"
+#
+#    volumes:
+#      - redis_data:/data
+#    environment:
+#      - REDIS_PASSWORD=${REDIS_PASSWORD}
+#    command:
+#      redis-server
+#      --requirepass $${REDIS_PASSWORD}
+#      --protected-mode no
+#      --save 60 1
+#      --loglevel notice
+#      --appendonly yes  # Добавить persistence
+#      --aclfile /dev/null
+#    networks:
+#      - marketly-network
+#    restart: unless-stopped
+
   redis:
     image: redis:7-alpine
     container_name: redis
@@ -127,9 +149,25 @@ services:
       - redis_data:/data
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-    command: redis-server --requirepass $${REDIS_PASSWORD}
+    command:
+      - redis-server
+      - --requirepass
+      - $${REDIS_PASSWORD}
+      - --protected-mode
+      - "no"
+      - --save
+      - "60"
+      - "1"
+      - --loglevel
+      - "notice"
+      - --appendonly
+      - "yes"
+      - --aclfile
+      - "/dev/null"
     networks:
       - marketly-network
+    restart: unless-stopped
+
 
 
 

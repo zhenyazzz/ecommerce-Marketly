@@ -56,10 +56,5 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.getAllCategories(pageable));
     }
 
-    @PostMapping("/cache/rebuild")
-    public ResponseEntity<Void> rebuildCache() {
-        categoryService.rebuildCategoryCache();
-        return ResponseEntity.ok().build();
-    }
 }
 

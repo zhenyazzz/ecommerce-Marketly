@@ -5,7 +5,7 @@ import org.com.productservice.dto.product.ProductRequest;
 import org.com.productservice.dto.product.ProductResponse;
 import org.com.productservice.model.Category;
 import org.com.productservice.model.Product;
-import org.com.productservice.repository.CategoryRepository;
+import org.com.productservice.repository.jpa.CategoryJpaRepository;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -16,7 +16,7 @@ import java.util.List;
 public abstract class ProductMapper {
 
     @Autowired  // Внедряем репозиторий
-    protected CategoryRepository categoryRepository;
+    protected CategoryJpaRepository categoryJpaRepository;
 
     @Mapping(target = "category", expression = "java(getCategoryById(request.getCategoryId()))")
     @Mapping(target = "id", ignore = true)
@@ -41,7 +41,7 @@ public abstract class ProductMapper {
         if (id == null) {
             return null;
         }
-        return categoryRepository.findById(id)
+        return categoryJpaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
     }
 

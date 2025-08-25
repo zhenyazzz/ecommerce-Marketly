@@ -1,6 +1,5 @@
 package org.com.productservice.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.com.productservice.dto.category.CategoryRequest;
 import org.com.productservice.dto.category.CategoryResponse;
@@ -8,10 +7,9 @@ import org.com.productservice.dto.category.CategoryResponse;
 import org.com.productservice.mapper.CategoryMapper;
 import org.com.productservice.exception.AlreadyExistsException;
 import org.com.productservice.exception.CategoryNotFoundException;
-import org.com.productservice.exception.InvalidCategoryHierarchyException;
 import org.com.productservice.model.Category;
-import org.com.productservice.repository.CategoryRepository;
-import org.com.productservice.repository.ProductRepository;
+import org.com.productservice.repository.jpa.CategoryJpaRepository;
+import org.com.productservice.repository.jpa.ProductJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,27 +22,25 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 
 @Service
 @Slf4j
 public class CategoryService{
 
-    private final CategoryRepository categoryRepository;
-    private final ProductRepository productRepository;
+    private final CategoryJpaRepository categoryJpaRepository;
+    private final ProductJpaRepository productJpaRepository;
     private final CategoryMapper categoryMapper;
     private final CacheManager cacheManager;
 
 
     @Autowired
-    public CategoryService(CategoryRepository categoryRepository,
-                           ProductRepository productRepository,
+    public CategoryService(CategoryJpaRepository categoryJpaRepository,
+                           ProductJpaRepository productJpaRepository,
                            CategoryMapper categoryMapper,
                            CacheManager cacheManager)
     {
-        this.categoryRepository = categoryRepository;
-        this.productRepository = productRepository;
+        this.categoryJpaRepository = categoryJpaRepository;
+        this.productJpaRepository = productJpaRepository;
         this.categoryMapper = categoryMapper;
         this.cacheManager = cacheManager;
     }
@@ -55,7 +51,7 @@ public class CategoryService{
     public CategoryResponse createCategory(CategoryRequest request) {
         validateCategoryUniqueness(request.getName(), null);
         Category category = categoryMapper.toCategory(request);
-        Category savedCategory = categoryRepository.save(category);
+        Category savedCategory = categoryJpaRepository.save(category);
         log.info("Created category: {}", savedCategory);
         return categoryMapper.toCategoryResponse(savedCategory);
     }
@@ -65,7 +61,7 @@ public class CategoryService{
     @Transactional(readOnly = true)
     @Cacheable(value = "categories", key = "#id", unless = "#result == null")
     public CategoryResponse getCategoryById(Long id) {
-        return categoryRepository.findById(id)
+        return categoryJpaRepository.findById(id)
                 .map(category -> {
                     log.debug("Fetching category: {}", id);
                     return categoryMapper.toCategoryResponse(category);
@@ -81,10 +77,10 @@ public class CategoryService{
             @CacheEvict(value = "categoryTree", allEntries = true)
     })
     public CategoryResponse updateCategory(Long id, CategoryRequest request) {
-        Category category = categoryRepository.getCategoryById(id);
+        Category category = categoryJpaRepository.getCategoryById(id);
         validateCategoryUniqueness(request.getName(), id);
         category.setName(request.getName());
-        return categoryMapper.toCategoryResponse(categoryRepository.save(category));
+        return categoryMapper.toCategoryResponse(categoryJpaRepository.save(category));
     }
 
 
@@ -96,7 +92,7 @@ public class CategoryService{
     })
     public void deleteCategory(Long id) {
         validateCategoryDeletion(id);
-        categoryRepository.deleteById(id);
+        categoryJpaRepository.deleteById(id);
         log.info("Deleted category with ID: {}", id);
     }
 
@@ -106,7 +102,7 @@ public class CategoryService{
     public Page<CategoryResponse> getAllCategories(
             @PageableDefault(size = 10, sort = "name", direction = Sort.Direction.ASC)
             Pageable pageable) {
-        return categoryRepository.findAll(pageable)
+        return categoryJpaRepository.findAll(pageable)
                 .map(this::convertAndEnrichCategory);
     }
 
@@ -114,7 +110,7 @@ public class CategoryService{
 
     //--- Валидация ---//
     private void validateCategoryUniqueness(String name, Long excludeId) {
-        categoryRepository.findByNameIgnoreCase(name)
+        categoryJpaRepository.findByNameIgnoreCase(name)
                 .ifPresent(category -> {
                     if (excludeId == null || !category.getId().equals(excludeId)) {
                         throw new AlreadyExistsException("Category with name " + name + " already exists");
@@ -126,7 +122,7 @@ public class CategoryService{
 
     private void validateCategoryDeletion(Long id) {
 
-        if (productRepository.existsByCategoryId(id)) {
+        if (productJpaRepository.existsByCategoryId(id)) {
             throw new IllegalStateException("Cannot delete category with products");
         }
     }
@@ -140,10 +136,4 @@ public class CategoryService{
     }
 
 
-
-    public void rebuildCategoryCache() {
-        cacheManager.getCache("categories").clear();
-        cacheManager.getCache("categoryTree").clear();
-        log.info("Category caches rebuilt");
-    }
 }
