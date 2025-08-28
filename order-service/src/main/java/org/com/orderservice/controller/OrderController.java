@@ -27,28 +27,12 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    @Operation(summary = "List all orders")
-    @GetMapping
-    public ResponseEntity<List<OrderResponse>> getAllOrders(
-    ){
-        try {
-            log.debug("Fetching all orders");
-            List<OrderResponse> orders = orderService.getAllOrders();
-            return ResponseEntity.ok(orders);
-        } catch (Exception e) {
-            log.error("Error fetching all orders", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-
-
 
 
     @Operation(summary = "Create new order")
     @PostMapping
     public ResponseEntity<OrderResponse> createOrder(
-            @RequestHeader(name = "X-User-Id") @Parameter(description = "User ID") Long userId,
+            @RequestHeader(name = "userId") @Parameter(description = "User ID") Long userId,
             @Valid @RequestBody CreateOrderRequest request
     ){
         try {
@@ -69,7 +53,7 @@ public class OrderController {
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderResponse> getOrder(
             @PathVariable @Parameter(description = "Order ID") UUID orderId,
-            @RequestHeader("X-User-Id") Long userId
+            @RequestHeader("userId") Long userId
     ){
         try {
             log.debug("Fetching order {} for user {}", orderId, userId);
@@ -84,11 +68,28 @@ public class OrderController {
 
 
 
+    @Operation(summary = "List all orders")
+    @GetMapping("/all")
+    public ResponseEntity<List<OrderResponse>> getAllOrders(
+    ){
+        try {
+            log.debug("Fetching all orders");
+            List<OrderResponse> orders = orderService.getAllOrders();
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            log.error("Error fetching all orders", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
+
+
 
     @Operation(summary = "List user orders by status")
-    @GetMapping("/user")
+    @GetMapping
     public ResponseEntity<List<OrderResponse>> getUserOrdersByStatus(
-            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("userId") Long userId,
             @RequestParam(required = false) OrderStatus status
     ){
         try {
@@ -106,9 +107,9 @@ public class OrderController {
 
 
     @Operation(summary = "List all user orders")
-    @GetMapping("/user")
+    @GetMapping("/allUserOrders")
     public ResponseEntity<List<OrderResponse>> getAllUserOrders(
-            @RequestHeader("X-User-Id") Long userId
+            @RequestHeader("userId") Long userId
     ){
         try {
             log.debug("Fetching all orders for user {}", userId);
@@ -168,7 +169,7 @@ public class OrderController {
     @DeleteMapping("/{orderId}")
     public ResponseEntity<Void> cancelOrder(
             @PathVariable UUID orderId,
-            @RequestHeader("X-User-Id") Long userId
+            @RequestHeader("userId") Long userId
     ){
         try {
             log.warn("User {} is cancelling order {}", userId, orderId);

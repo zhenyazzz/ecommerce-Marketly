@@ -11,14 +11,15 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(
         name = "cart-service",
+        //name = "CART-SERVICE",
         fallback = CartServiceClientFallback.class
 )
 public interface CartServiceClient {
     @Operation(summary = "Get user cart")
     @GetMapping("/api/cart")
-    CartResponse getCart(@RequestHeader("X-User-Id") @NotNull Long userId);
+    CartResponse getCart(@RequestHeader("userId") @NotNull Long userId);
 
     @Operation(summary = "Clear user cart")
     @DeleteMapping("/api/cart")
-    void clearCart(@RequestHeader("X-User-Id") @NotNull Long userId);
+    void clearCart(@RequestHeader("userId") @NotNull Long userId);
 }

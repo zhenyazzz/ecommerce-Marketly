@@ -63,6 +63,5 @@ logging:
     org.springframework.cloud.openfeign: DEBUG
 #    org.springframework.kafka: DEBUG
     org.com.cartservice: DEBUG
-
 server:
-  port: 8083
+  port: 8084

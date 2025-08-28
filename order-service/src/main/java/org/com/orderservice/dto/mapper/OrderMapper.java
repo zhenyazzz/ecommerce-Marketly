@@ -14,13 +14,16 @@ import org.mapstruct.*;
 import java.lang.annotation.Target;
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+        componentModel = "spring",
+        imports = {org.com.orderservice.model.OrderStatus.class}
+)
 public interface OrderMapper {
 
 
     @Mappings({
-        @Mapping(target = "orderId", source = "id"),
-        @Mapping(target = "totalAmount", source = "total"),
+        @Mapping(target = "id", source = "id"),
+        @Mapping(target = "total", source = "total"),
         @Mapping(target = "items", source = "orderItems")
     })
     OrderResponse toOrderResponse(Order order);
